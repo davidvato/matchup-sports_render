@@ -1,0 +1,30 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id          Int          @id @default(autoincrement())
+  username    String       @unique
+  password    String
+  role        String       @default("ADMIN")
+  tournaments Tournament[]
+  createdAt   DateTime     @default(now())
+}
+
+model Tournament {
+  id          Int      @id @default(autoincrement())
+  name        String
+  sport       String
+  date        DateTime @default(now())
+  creator     User     @relation(fields: [creatorId], references: [id])
+  creatorId   Int
+  status      String   @default("OPEN") // OPEN, IN_PROGRESS, FINISHED
+}
