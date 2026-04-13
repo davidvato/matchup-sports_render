@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,20 +8,69 @@ datasource db {
 }
 
 model User {
-  id          Int          @id @default(autoincrement())
-  username    String       @unique
-  password    String
-  role        String       @default("ADMIN")
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  role      String   @default("ADMIN") // SUPERADMIN, ADMIN
+  createdAt DateTime @default(now())
   tournaments Tournament[]
-  createdAt   DateTime     @default(now())
 }
 
 model Tournament {
-  id          Int      @id @default(autoincrement())
+  id          String   @id @default(cuid())
   name        String
-  sport       String
-  date        DateTime @default(now())
-  creator     User     @relation(fields: [creatorId], references: [id])
+  sport       String?
+  createdAt   DateTime @default(now())
   creatorId   Int
-  status      String   @default("OPEN") // OPEN, IN_PROGRESS, FINISHED
+  creator     User     @relation(fields: [creatorId], references: [id])
+  groups      Group[]
+}
+
+model Group {
+  id           String     @id @default(cuid())
+  name         String
+  tournamentId String
+  createdAt    DateTime   @default(now())
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  matches      Match[]
+  pairs        Pair[]
+}
+
+model Pair {
+  id           String   @id @default(cuid())
+  name         String
+  groupId      String
+  group        Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  scores       Score[]
+  totalScore   Int      @default(0)
+  
+  // Relations for matches
+  matchesAsA   Match[]  @relation("PairAMatches")
+  matchesAsB   Match[]  @relation("PairBMatches")
+
+  @@unique([groupId, name])
+}
+
+model Match {
+  id        String   @id @default(cuid())
+  groupId   String
+  pairAId   String
+  pairBId   String
+  winnerId  String?
+  pointsA   Int      @default(0)
+  pointsB   Int      @default(0)
+  createdAt DateTime @default(now())
+  pairB     Pair     @relation("PairBMatches", fields: [pairBId], references: [id], onDelete: Cascade)
+  pairA     Pair     @relation("PairAMatches", fields: [pairAId], references: [id], onDelete: Cascade)
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, pairAId, pairBId])
+}
+
+model Score {
+  id        String   @id @default(cuid())
+  points    Int
+  pairId    String
+  createdAt DateTime @default(now())
+  pair      Pair     @relation(fields: [pairId], references: [id], onDelete: Cascade)
 }
