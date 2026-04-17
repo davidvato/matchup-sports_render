@@ -188,6 +188,39 @@ app.get('/api/tournaments/:id', async (req, res) => {
   }
 });
 
+// Categories: Add Pair
+app.post('/api/categories/:id/pairs', async (req, res) => {
+  const { name } = req.body;
+  try {
+    const pair = await prisma.pair.create({
+      data: {
+        name,
+        categoryId: req.params.id
+      }
+    });
+    res.json(pair);
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// Categories: Get detail
+app.get('/api/categories/:id', async (req, res) => {
+  try {
+    const category = await prisma.category.findUnique({
+      where: { id: req.params.id },
+      include: {
+        pairs: true,
+        groups: true,
+        brackets: true
+      }
+    });
+    res.json(category);
+  } catch (error) {
+    res.status(500).json({ success: false });
+  }
+});
+
 // Categories: Create Group
 app.post('/api/categories/:id/groups', async (req, res) => {
   const { name } = req.body;
@@ -276,6 +309,7 @@ app.get('/api/groups/:id', async (req, res) => {
     const group = await prisma.group.findUnique({
       where: { id: req.params.id },
       include: {
+        category: true,
         pairs: { include: { _count: { select: { scores: true } } } },
         matches: {
           include: {
@@ -329,6 +363,7 @@ app.get('/api/brackets/:id', async (req, res) => {
     const bracket = await prisma.bracket.findUnique({
       where: { id: req.params.id },
       include: {
+        category: true,
         matches: {
           include: {
             pairA: true,
@@ -380,19 +415,30 @@ app.post('/api/matches/:id/result', async (req, res) => {
         data: { winnerId, pointsA, pointsB }
       });
 
-      // 2. Add scores
-      await tx.score.create({ data: { points: pointsA, pairId: pairAId } });
-      const pairA = await tx.pair.findUnique({ where: { id: pairAId } });
+      // 2. Recalculate totalScore for Pair A
+      const matchesA = await tx.match.findMany({ where: { pairAId } });
+      const matchesB_asA = await tx.match.findMany({ where: { pairBId: pairAId } });
+      
+      const totalA = [...matchesA, ...matchesB_asA].reduce((sum, m) => {
+        return sum + (m.pairAId === pairAId ? m.pointsA : m.pointsB);
+      }, 0);
+
       await tx.pair.update({
         where: { id: pairAId },
-        data: { totalScore: (pairA?.totalScore || 0) + pointsA }
+        data: { totalScore: totalA }
       });
 
-      await tx.score.create({ data: { points: pointsB, pairId: pairBId } });
-      const pairB = await tx.pair.findUnique({ where: { id: pairBId } });
+      // 3. Recalculate totalScore for Pair B
+      const matchesB = await tx.match.findMany({ where: { pairBId } });
+      const matchesA_asB = await tx.match.findMany({ where: { pairAId: pairBId } });
+      
+      const totalB = [...matchesB, ...matchesA_asB].reduce((sum, m) => {
+        return sum + (m.pairBId === pairBId ? m.pointsB : m.pointsA);
+      }, 0);
+
       await tx.pair.update({
         where: { id: pairBId },
-        data: { totalScore: (pairB?.totalScore || 0) + pointsB }
+        data: { totalScore: totalB }
       });
     });
     res.json({ success: true });
@@ -411,7 +457,58 @@ app.delete('/api/pairs/:id', async (req, res) => {
   }
 });
 
-// Groups: Reset
+// Pairs: Assign to Group (Batch)
+app.post('/api/groups/:id/pairs/batch', async (req, res) => {
+  const { pairIds } = req.body;
+  const groupId = req.params.id;
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Assign pairs to group
+      await tx.pair.updateMany({
+        where: { id: { in: pairIds } },
+        data: { groupId }
+      });
+
+      // 2. Get all pairs now in the group to generate round-robin matches
+      const allPairs = await tx.pair.findMany({
+        where: { groupId }
+      });
+
+      // 3. Generate matches that don't already exist
+      for (let i = 0; i < allPairs.length; i++) {
+        for (let j = i + 1; j < allPairs.length; j++) {
+          const pairAId = allPairs[i].id;
+          const pairBId = allPairs[j].id;
+
+          const existingMatch = await tx.match.findFirst({
+            where: {
+              OR: [
+                { pairAId, pairBId, groupId },
+                { pairAId: pairBId, pairBId: pairAId, groupId }
+              ]
+            }
+          });
+
+          if (!existingMatch) {
+            await tx.match.create({
+              data: {
+                groupId,
+                pairAId,
+                pairBId
+              }
+            });
+          }
+        }
+      }
+      return { success: true };
+    });
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ success: false, message: 'Error al asignar parejas' });
+  }
+});
+
+// Pairs: Reset scores in a group (Legacy/Manual)
 app.post('/api/groups/:id/reset', async (req, res) => {
   const groupId = req.params.id;
   try {

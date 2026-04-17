@@ -235,7 +235,7 @@ const TournamentDetails: React.FC = () => {
 
   if (loading) return <div style={{ color: 'white', textAlign: 'center', padding: '100px' }}>Cargando torneo...</div>;
 
-  const currentCategory = tournament?.categories[activeTab];
+  const currentCategory = tournament?.categories?.[activeTab];
 
   return (
     <div style={{
