@@ -27,7 +27,10 @@ interface Bracket {
   id: string;
   name: string;
   categoryId: string;
-  category: { tournamentId: string };
+  category: { 
+    tournamentId: string,
+    tournament: { sport: string }
+  };
   matches: BracketMatch[];
 }
 
@@ -104,6 +107,17 @@ const BracketDetails: React.FC = () => {
 
   const handleUpdateResult = async (match: BracketMatch, pA: number, pB: number) => {
     const winnerId = pA > pB ? match.pairA?.id : (pB > pA ? match.pairB?.id : null);
+    
+    if (pA === pB) {
+      setConfirmModal({
+        show: true,
+        title: 'Empate no permitido',
+        message: 'En Brackets debe haber un ganador para avanzar a la siguiente ronda. Por favor ingresa un marcador diferente.',
+        onConfirm: () => {}
+      });
+      return;
+    }
+
     if (!winnerId) return;
 
     const nextMatchPos = match.matchIndex % 2 === 0 ? 'pairAId' : 'pairBId';

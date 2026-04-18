@@ -369,7 +369,11 @@ app.get('/api/brackets/:id', async (req, res) => {
     const bracket = await prisma.bracket.findUnique({
       where: { id: req.params.id },
       include: {
-        category: true,
+        category: {
+          include: {
+            tournament: true
+          }
+        },
         matches: {
           include: {
             pairA: true,
@@ -539,6 +543,13 @@ app.post('/api/matches/:id/result', async (req, res) => {
 
             if (myPoints > opponentPoints) return total + 3;
             if (myPoints === opponentPoints) return total + 1;
+            return total;
+          } else if (currentSport === 'basquetball') {
+            const isPairA = m.pairAId === pairId;
+            const myPoints = isPairA ? m.pointsA : m.pointsB;
+            const opponentPoints = isPairA ? m.pointsB : m.pointsA;
+
+            if (myPoints > opponentPoints) return total + 2;
             return total;
           } else {
             // Default: sum of points scored
