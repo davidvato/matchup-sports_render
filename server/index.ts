@@ -527,10 +527,10 @@ app.post('/api/matches/:id/result', async (req, res) => {
 
       const sport = match.group.category.tournament.sport?.toLowerCase();
 
-      // Helper to calculate total points for a pair in a sport
       const calculateStats = (matches: any[], pairId: string, currentSport: string | undefined) => {
         return matches.reduce((total, m) => {
-          if (!m.winnerId && m.pointsA === 0 && m.pointsB === 0) return total; // Match not played
+          const isPlayed = !!m.winnerId;
+          if (!isPlayed && m.pointsA === 0 && m.pointsB === 0) return total; // Match not played (initial state)
 
           if (currentSport === 'futbol') {
             const isPairA = m.pairAId === pairId;

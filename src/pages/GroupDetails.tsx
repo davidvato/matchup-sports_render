@@ -7,6 +7,10 @@ interface Pair {
   id: string;
   name: string;
   totalScore: number;
+  groupId?: string | null;
+  group?: { name: string } | null;
+  bracketMatchesAsA?: { bracket: { name: string } }[];
+  bracketMatchesAsB?: { bracket: { name: string } }[];
 }
 
 interface FootballStats {
@@ -92,8 +96,8 @@ const GroupDetails: React.FC = () => {
       if (data.categoryId) {
         const catRes = await fetch(`http://localhost:3001/api/categories/${data.categoryId}`);
         const catData = await catRes.json();
-        // Filter out pairs already in a group
-        setAvailablePairs(catData.pairs.filter((p: any) => !p.groupId));
+        // Get all category pairs (we will show them all with warnings instead of filtering)
+        setAvailablePairs(catData.pairs);
       }
     } catch (err) {
       console.error(err);
@@ -130,9 +134,38 @@ const GroupDetails: React.FC = () => {
     }
   };
 
-  const togglePairSelection = (pairId: string) => {
+  const togglePairSelection = (pair: Pair) => {
+    const isSelected = selectedPairs.includes(pair.id);
+    
+    if (!isSelected) {
+      // Check for existing assignments
+      let warningMessage = '';
+      if (pair.group && pair.groupId !== id) {
+        warningMessage = `Este jugador ya está asignado al grupo: ${pair.group.name}.`;
+      } else {
+        const bracketA = pair.bracketMatchesAsA?.[0]?.bracket?.name;
+        const bracketB = pair.bracketMatchesAsB?.[0]?.bracket?.name;
+        const bracketName = bracketA || bracketB;
+        if (bracketName) {
+          warningMessage = `Este jugador ya está asignado al bracket: ${bracketName}.`;
+        }
+      }
+
+      if (warningMessage) {
+        setConfirmModal({
+          show: true,
+          title: 'Jugador ya asignado',
+          message: `${warningMessage}\n\n¿Deseas seleccionarlo de todas formas? Se moverá a este grupo al guardar.`,
+          onConfirm: () => {
+             setSelectedPairs(prev => [...prev, pair.id]);
+          }
+        });
+        return;
+      }
+    }
+
     setSelectedPairs(prev => 
-      prev.includes(pairId) ? prev.filter(id => id !== pairId) : [...prev, pairId]
+      prev.includes(pair.id) ? prev.filter(id => id !== pair.id) : [...prev, pair.id]
     );
   };
 
@@ -154,7 +187,7 @@ const GroupDetails: React.FC = () => {
   };
 
   const handleUpdateResult = async (matchId: string, pairAId: string, pairBId: string, pointsA: number, pointsB: number) => {
-    const winnerId = pointsA > pointsB ? pairAId : (pointsB > pointsA ? pairBId : null);
+    const winnerId = pointsA > pointsB ? pairAId : (pointsB > pointsA ? pairBId : 'DRAW');
     try {
       const res = await fetch(`http://localhost:3001/api/matches/${matchId}/result`, {
         method: 'POST',
@@ -192,7 +225,12 @@ const GroupDetails: React.FC = () => {
     if (!group) return stats;
 
     group.matches.forEach(m => {
-      if (!m.winnerId && m.pointsA === 0 && m.pointsB === 0) return; // Match not played
+      if (!m.winnerId && m.pointsA === 0 && m.pointsB === 0) return; // Match really not played (initial state)
+      if (m.winnerId === 'DRAW' && m.pointsA === 0 && m.pointsB === 0) {
+        // It's a played 0-0 draw, continue
+      } else if (!m.winnerId) {
+        return; // Other null winner cases are not played
+      }
       
       const isPairA = m.pairA.id === pairId;
       const isPairB = m.pairB.id === pairId;
@@ -322,6 +360,7 @@ const GroupDetails: React.FC = () => {
                           if (!match) return <td key={colPair.id} style={{ border: '1px solid rgba(255,255,255,0.05)' }}></td>;
 
                           const isWinner = match.winnerId === rowPair.id;
+                          const isDraw = match.winnerId === 'DRAW';
                           const isFinished = !!match.winnerId;
 
                           return (
@@ -367,7 +406,11 @@ const GroupDetails: React.FC = () => {
                             >
                               {isFinished && (
                                 <div style={{ display: 'flex', justifyContent: 'center' }}>
-                                  <Trophy size={20} color={isWinner ? '#4ade80' : '#ff4b2b'} />
+                                  {isDraw ? (
+                                    <span style={{ color: '#ffcc00', fontWeight: 'bold', fontSize: '1.2rem' }}>E</span>
+                                  ) : (
+                                    <Trophy size={20} color={isWinner ? '#4ade80' : '#ff4b2b'} />
+                                  )}
                                 </div>
                               )}
                             </td>
@@ -517,30 +560,48 @@ const GroupDetails: React.FC = () => {
             </div>
             <p style={{ opacity: 0.6, marginBottom: '2rem' }}>Selecciona los jugadores de la categoría para unirlos a este grupo:</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '300px', overflowY: 'auto', paddingRight: '10px', marginBottom: '2rem' }}>
-              {availablePairs.map(pair => (
-                <div 
-                  key={pair.id} 
-                  className="glass-card" 
-                  onClick={() => togglePairSelection(pair.id)}
-                  style={{ 
-                    padding: '1rem', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '15px',
-                    background: selectedPairs.includes(pair.id) ? 'rgba(0, 242, 254, 0.1)' : 'rgba(255,255,255,0.02)',
-                    border: selectedPairs.includes(pair.id) ? '1px solid var(--primary)' : '1px solid transparent',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <input 
-                    type="checkbox" 
-                    checked={selectedPairs.includes(pair.id)}
-                    onChange={() => {}} // Controlled via onClick of parent
-                    style={{ cursor: 'pointer', width: '20px', height: '20px', accentColor: 'var(--primary)' }}
-                  />
-                  <span>{pair.name}</span>
-                </div>
-              ))}
+              {availablePairs.map(pair => {
+                const isAssigned = (pair.group && pair.groupId !== id) || 
+                                  (pair.bracketMatchesAsA?.length! > 0) || 
+                                  (pair.bracketMatchesAsB?.length! > 0);
+                let assignmentLabel = '';
+                if (pair.group && pair.groupId !== id) assignmentLabel = `(En ${pair.group.name})`;
+                else if (pair.bracketMatchesAsA?.[0]?.bracket?.name || pair.bracketMatchesAsB?.[0]?.bracket?.name) {
+                  assignmentLabel = `(En ${pair.bracketMatchesAsA?.[0]?.bracket?.name || pair.bracketMatchesAsB?.[0]?.bracket?.name})`;
+                }
+
+                return (
+                  <div 
+                    key={pair.id} 
+                    className="glass-card" 
+                    onClick={() => togglePairSelection(pair)}
+                    style={{ 
+                      padding: '1rem', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'space-between',
+                      background: selectedPairs.includes(pair.id) ? 'rgba(0, 242, 254, 0.1)' : 'rgba(255,255,255,0.02)',
+                      border: selectedPairs.includes(pair.id) ? '1px solid var(--primary)' : '1px solid transparent',
+                      cursor: 'pointer',
+                      opacity: pair.groupId === id ? 0.3 : 1, // Dim if already in THIS group
+                      pointerEvents: pair.groupId === id ? 'none' : 'auto'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={selectedPairs.includes(pair.id)}
+                        onChange={() => {}} // Controlled via onClick of parent
+                        style={{ cursor: 'pointer', width: '20px', height: '20px', accentColor: 'var(--primary)' }}
+                      />
+                      <span>{pair.name}</span>
+                    </div>
+                    {isAssigned && (
+                      <span style={{ fontSize: '0.7rem', opacity: 0.5, fontStyle: 'italic' }}>{assignmentLabel}</span>
+                    )}
+                  </div>
+                );
+              })}
               {availablePairs.length === 0 && (
                 <p style={{ textAlign: 'center', opacity: 0.4, padding: '2rem' }}>No hay jugadores disponibles en esta categoría.</p>
               )}

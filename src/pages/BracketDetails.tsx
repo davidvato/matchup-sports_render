@@ -144,23 +144,34 @@ const BracketDetails: React.FC = () => {
       if (pair) {
         let warningMessage = '';
         if (pair.group) {
-          warningMessage = `¡Cuidado! Este jugador ya está asignado al grupo: ${pair.group.name}.`;
+          warningMessage = `Este jugador ya está asignado al grupo: ${pair.group.name}.`;
         } else {
           const bracketA = pair.bracketMatchesAsA?.[0]?.bracket?.name;
           const bracketB = pair.bracketMatchesAsB?.[0]?.bracket?.name;
           const bracketName = bracketA || bracketB;
           if (bracketName) {
-            warningMessage = `¡Cuidado! Este jugador ya está asignado al bracket: ${bracketName}.`;
+            warningMessage = `Este jugador ya está asignado al bracket: ${bracketName}.`;
           }
         }
 
         if (warningMessage) {
-          const confirmAssign = window.confirm(`${warningMessage}\n\n¿Deseas asignarlo de todas formas?`);
-          if (!confirmAssign) return;
+          setConfirmModal({
+            show: true,
+            title: 'Jugador ya asignado',
+            message: `${warningMessage}\n\n¿Deseas asignarlo de todas formas?`,
+            onConfirm: async () => {
+               await executeAssign(pairId);
+            }
+          });
+          return;
         }
       }
     }
 
+    await executeAssign(pairId);
+  };
+
+  const executeAssign = async (pairId: string | null) => {
     try {
       const res = await fetch(`http://localhost:3001/api/bracket-matches/${selectModal.matchId}`, {
         method: 'PATCH',
@@ -461,7 +472,7 @@ const BracketDetails: React.FC = () => {
                 --- Vacío ---
               </div>
               {categoryPairs.map(pair => {
-                const isAssigned = pair.group || (pair.bracketMatchesAsA?.length! > 0) || (pair.bracketMatchesAsB?.length! > 0);
+                const isAssigned = (pair.group) || (pair.bracketMatchesAsA?.length! > 0) || (pair.bracketMatchesAsB?.length! > 0);
                 let assignmentLabel = '';
                 if (pair.group) assignmentLabel = `(En ${pair.group.name})`;
                 else if (pair.bracketMatchesAsA?.[0]?.bracket?.name || pair.bracketMatchesAsB?.[0]?.bracket?.name) {
