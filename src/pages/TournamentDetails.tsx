@@ -516,9 +516,11 @@ const TournamentDetails: React.FC = () => {
                         <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><Users size={14} /> {group._count.pairs} Parejas</span>
                         <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><Activity size={14} /> {group._count.matches} Partidos</span>
                       </div>
-                      <Link to={`/group/${group.id}`} className="btn-primary" style={{ textDecoration: 'none', padding: '0.7rem 1rem', fontSize: '0.9rem', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '5px' }}>
-                        Gestionar <ArrowRight size={16} />
-                      </Link>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                        <Link to={`/group/${group.id}`} className="btn-primary" style={{ textDecoration: 'none', padding: '0.6rem 1.2rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                          Gestionar <ArrowRight size={16} />
+                        </Link>
+                      </div>
                     </div>
                   ))}
                 </div>
