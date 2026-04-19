@@ -245,11 +245,11 @@ const GroupDetails: React.FC = () => {
     set4A?: number, set4B?: number,
     set5A?: number, set5B?: number
   ) => {
-    if ((isBasketball || isRacquetball) && pointsA === pointsB) {
+    if ((isBasketball || isRacquetball || isPickleball) && pointsA === pointsB) {
       setConfirmModal({
         show: true,
         title: 'Empate no permitido',
-        message: `En ${isBasketball ? 'básquetbol' : 'racquetball'} no puede haber empates. Por favor ingresa un ganador.`,
+        message: `En ${isBasketball ? 'básquetbol' : (isRacquetball ? 'racquetball' : 'pickleball')} no puede haber empates. Por favor ingresa un ganador.`,
         onConfirm: () => { }
       });
       return;
@@ -294,8 +294,10 @@ const GroupDetails: React.FC = () => {
   const isFootball = group?.category?.tournament?.sport?.toLowerCase() === 'futbol';
   const isBasketball = group?.category?.tournament?.sport?.toLowerCase() === 'basquetball';
   const isRacquetball = group?.category?.tournament?.sport?.toLowerCase() === 'racquetball';
+  const isPickleball = group?.category?.tournament?.sport?.toLowerCase() === 'pickleball';
   const isRacquetball2Of3 = isRacquetball && group?.category?.tournament?.description === '2 de 3 sets a 15 puntos con cambios';
   const isRacquetball3Of5 = isRacquetball && group?.category?.tournament?.description === '3 de 5 sets a 11 puntos, punto directo, con diferencia de dos puntos';
+  const isPickleballLogic = isPickleball && group?.category?.tournament?.description === '1 set a 7 puntos minimo';
 
   const getFootballStats = (pairId: string): FootballStats => {
     const stats = { pj: 0, g: 0, e: 0, p: 0, gf: 0, gc: 0, dg: 0, pts: 0 };
@@ -410,10 +412,10 @@ const GroupDetails: React.FC = () => {
       if (statsB.pts !== statsA.pts) return statsB.pts - statsA.pts;
       return statsB.g - statsA.g;
     }
-    if (isRacquetball) {
+    if (isRacquetball || isPickleball) {
       const statsA = getRacquetballStats(a.id);
       const statsB = getRacquetballStats(b.id);
-
+      
       if (statsB.pts !== statsA.pts) return statsB.pts - statsA.pts;
       return statsB.g - statsA.g;
     }
@@ -566,7 +568,7 @@ const GroupDetails: React.FC = () => {
                             >
                               {isFinished && (
                                 <div style={{ display: 'flex', justifyContent: 'center' }}>
-                                  {isDraw && !isBasketball && !isRacquetball ? (
+                                  {isDraw && !isBasketball && !isRacquetball && !isPickleball ? (
                                     <span style={{ color: '#ffcc00', fontWeight: 'bold', fontSize: '1.2rem' }}>E</span>
                                   ) : (
                                     <Trophy size={20} color={isWinner ? '#4ade80' : '#ff4b2b'} />
@@ -624,6 +626,11 @@ const GroupDetails: React.FC = () => {
                                   ({match.set1A}-{match.set1B}, {match.set2A}-{match.set2B}, {match.set3A}-{match.set3B}, {match.set4A}-{match.set4B}, {match.set5A}-{match.set5B})
                                 </span>
                               )}
+                              {isPickleballLogic && (
+                                <span style={{ fontSize: '0.7rem', opacity: 0.5, fontWeight: 'normal' }}>
+                                  ({match.set1A}-{match.set1B})
+                                </span>
+                              )}
                             </div>
                           ) : '-- : --'}
                         </td>
@@ -671,7 +678,7 @@ const GroupDetails: React.FC = () => {
                         <th style={{ padding: '10px 5px', textAlign: 'center' }}>PP</th>
                         <th style={{ padding: '10px 5px', textAlign: 'right' }}>Pts</th>
                       </>
-                    ) : isRacquetball ? (
+                    ) : (isRacquetball || isPickleball) ? (
                       <>
                         <th style={{ padding: '10px 5px', textAlign: 'center' }}>PJ</th>
                         <th style={{ padding: '10px 5px', textAlign: 'center' }}>PG</th>
@@ -712,7 +719,7 @@ const GroupDetails: React.FC = () => {
                             <td style={{ padding: '12px 5px', textAlign: 'center', fontSize: '0.8rem' }}>{statsB.p}</td>
                             <td style={{ padding: '12px 5px', textAlign: 'right', color: 'var(--primary)', fontWeight: 'bold' }}>{statsB.pts}</td>
                           </>
-                        ) : isRacquetball && statsR ? (
+                        ) : (isRacquetball || isPickleball) && statsR ? (
                           <>
                             <td style={{ padding: '12px 5px', textAlign: 'center', fontSize: '0.8rem' }}>{statsR.pj}</td>
                             <td style={{ padding: '12px 5px', textAlign: 'center', fontSize: '0.8rem' }}>{statsR.g}</td>
@@ -848,7 +855,7 @@ const GroupDetails: React.FC = () => {
           }}>
             <h2 style={{ marginBottom: '2rem', color: 'white' }}>Registrar Resultado</h2>
 
-            {(!isRacquetball2Of3 && !isRacquetball3Of5) ? (
+            {(!isRacquetball2Of3 && !isRacquetball3Of5 && !isPickleballLogic) ? (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2rem', marginBottom: '3rem' }}>
                 <div style={{ flex: 1, textAlign: 'right' }}>
                   <div style={{ fontSize: '1.2rem', marginBottom: '10px', fontWeight: 'bold' }}>{resultModal.rowPair?.name}</div>
@@ -938,6 +945,27 @@ const GroupDetails: React.FC = () => {
                     <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--primary)' }}>
                       {(parseInt(resultModal.set1Col) || 0) + (parseInt(resultModal.set2Col) || 0) + (parseInt(resultModal.set3Col) || 0) + (parseInt(resultModal.set4Col) || 0) + (parseInt(resultModal.set5Col) || 0)}
                     </div>
+                  </div>
+                </div>
+              </div>
+            ) : isPickleballLogic ? (
+              <div style={{ marginBottom: '3rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 1.5fr', gap: '1rem', alignItems: 'center', marginBottom: '1rem', opacity: 0.5, fontSize: '0.8rem' }}>
+                  <div style={{ textAlign: 'right' }}>{resultModal.rowPair?.name}</div>
+                  <div style={{ textAlign: 'center' }}>Set 1</div>
+                  <div style={{ textAlign: 'center' }}>Set 1</div>
+                  <div style={{ textAlign: 'left' }}>{resultModal.colPair?.name}</div>
+                </div>
+
+                <SetRow label="Único Set" valA={resultModal.set1Row} valB={resultModal.set1Col} onChangeA={(v) => setResultModal({ ...resultModal, set1Row: v })} onChangeB={(v) => setResultModal({ ...resultModal, set1Col: v })} />
+
+                <div style={{
+                  marginTop: '2rem', padding: '1.5rem', background: 'rgba(255,255,255,0.02)',
+                  borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center',
+                  border: '1px solid rgba(255,255,255,0.05)'
+                }}>
+                  <div style={{ fontSize: '1.2rem', color: 'var(--primary)', fontWeight: 'bold' }}>
+                    Solo cuenta el primer set
                   </div>
                 </div>
               </div>
@@ -1114,6 +1142,25 @@ const GroupDetails: React.FC = () => {
 
                     pA = s1A + s2A + s3A + s4A + s5A;
                     pB = s1B + s2B + s3B + s4B + s5B;
+                  } else if (isPickleballLogic) {
+                    s1A = isRowPairA ? parseInt(resultModal.set1Row) || 0 : parseInt(resultModal.set1Col) || 0;
+                    s1B = isRowPairA ? parseInt(resultModal.set1Col) || 0 : parseInt(resultModal.set1Row) || 0;
+
+                    if (s1A === s1B && s1A + s1B > 0) {
+                      setConfirmModal({ show: true, title: 'Empate no permitido', message: 'No se permiten empates en Pickleball.', onConfirm: () => { } });
+                      return;
+                    }
+
+                    const maxVal = Math.max(s1A, s1B);
+                    if (maxVal < 7) {
+                      setConfirmModal({ show: true, title: 'Puntuación mínima insuficiente', message: 'El ganador del set debe alcanzar al menos 7 puntos.', onConfirm: () => { } });
+                      return;
+                    }
+
+                    pA = s1A;
+                    pB = s1B;
+                    // Reset other sets
+                    s2A = s2B = s3A = s3B = s4A = s4B = s5A = s5B = 0;
                   } else {
                     pA = isRowPairA ? parseInt(resultModal.scoreRow) : parseInt(resultModal.scoreCol);
                     pB = isRowPairA ? parseInt(resultModal.scoreCol) : parseInt(resultModal.scoreRow);

@@ -168,8 +168,12 @@ const TournamentCreation: React.FC = () => {
                       setSport(selectedSport);
                       if (selectedSport === 'Racquetball') {
                         setShowRacquetModal(true);
+                      } else if (selectedSport === 'Pickleball') {
+                        setDescription('1 set a 7 puntos minimo');
+                        setShowRacquetModal(false);
                       } else {
                         setDescription('');
+                        setShowRacquetModal(false);
                       }
                     }}
                   >

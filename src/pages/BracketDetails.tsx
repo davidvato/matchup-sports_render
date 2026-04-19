@@ -143,6 +143,8 @@ const BracketDetails: React.FC = () => {
     bracket?.category?.tournament?.description === '2 de 3 sets a 15 puntos con cambios';
   const isRacquetball3Of5 = bracket?.category?.tournament?.sport?.toLowerCase() === 'racquetball' &&
     bracket?.category?.tournament?.description === '3 de 5 sets a 11 puntos, punto directo, con diferencia de dos puntos';
+  const isPickleballLogic = bracket?.category?.tournament?.sport?.toLowerCase() === 'pickleball' &&
+    bracket?.category?.tournament?.description === '1 set a 7 puntos minimo';
 
   const handleUpdateResult = async (
     match: BracketMatch,
@@ -423,7 +425,7 @@ const BracketDetails: React.FC = () => {
                         style={{ width: '45px', padding: '2px 5px', textAlign: 'center', background: 'rgba(255,255,255,0.05)' }}
                         value={match.pointsA}
                         onFocus={() => {
-                          if (isAdmin && (isRacquetball2Of3 || isRacquetball3Of5)) {
+                          if (isAdmin && (isRacquetball2Of3 || isRacquetball3Of5 || isPickleballLogic)) {
                             setResultModal({
                               show: true,
                               match,
@@ -441,14 +443,16 @@ const BracketDetails: React.FC = () => {
                           }
                         }}
                         onChange={() => { }} // Controlled by onFocus/Modal for 3/5 sets
-                        onBlur={(e) => !isRacquetball2Of3 && !isRacquetball3Of5 && handleUpdateResult(match, parseInt(e.target.value), match.pointsB)}
+                        onBlur={(e) => !isRacquetball2Of3 && !isRacquetball3Of5 && !isPickleballLogic && handleUpdateResult(match, parseInt(e.target.value), match.pointsB)}
                         onClick={(e) => e.stopPropagation()}
                         disabled={!isAdmin || !match.pairA || !match.pairB}
                       />
                     </div>
-                    {(isRacquetball2Of3 || isRacquetball3Of5) && match.pointsA + match.pointsB > 0 && (
+                    {(isRacquetball2Of3 || isRacquetball3Of5 || isPickleballLogic) && match.pointsA + match.pointsB > 0 && (
                       <div style={{ fontSize: '0.6rem', opacity: 0.5, textAlign: 'center', marginTop: '-4px', marginBottom: '8px' }}>
-                        {isRacquetball2Of3 ? (
+                        {isPickleballLogic ? (
+                           `(${match.set1A}-${match.set1B})`
+                        ) : isRacquetball2Of3 ? (
                            `(${match.set1A}-${match.set1B}, ${match.set2A}-${match.set2B}, ${match.set3A}-${match.set3B})`
                         ) : (
                            `(${match.set1A}-${match.set1B}, ${match.set2A}-${match.set2B}, ${match.set3A}-${match.set3B}, ${match.set4A}-${match.set4B}, ${match.set5A}-${match.set5B})`
@@ -475,7 +479,7 @@ const BracketDetails: React.FC = () => {
                         style={{ width: '45px', padding: '2px 5px', textAlign: 'center', background: 'rgba(255,255,255,0.05)' }}
                         value={match.pointsB}
                         onFocus={() => {
-                          if (isAdmin && (isRacquetball2Of3 || isRacquetball3Of5)) {
+                          if (isAdmin && (isRacquetball2Of3 || isRacquetball3Of5 || isPickleballLogic)) {
                             setResultModal({
                               show: true,
                               match,
@@ -493,7 +497,7 @@ const BracketDetails: React.FC = () => {
                           }
                         }}
                         onChange={() => { }}
-                        onBlur={(e) => !isRacquetball2Of3 && !isRacquetball3Of5 && handleUpdateResult(match, match.pointsA, parseInt(e.target.value))}
+                        onBlur={(e) => !isRacquetball2Of3 && !isRacquetball3Of5 && !isPickleballLogic && handleUpdateResult(match, match.pointsA, parseInt(e.target.value))}
                         onClick={(e) => e.stopPropagation()}
                         disabled={!isAdmin || !match.pairA || !match.pairB}
                       />
@@ -641,9 +645,16 @@ const BracketDetails: React.FC = () => {
                 <div style={{ textAlign: 'left' }}>{resultModal.match.pairB?.name || 'B'}</div>
               </div>
 
-              <SetRow label="Set 1" valA={resultModal.set1A} valB={resultModal.set1B} onChangeA={(v) => setResultModal({ ...resultModal, set1A: v })} onChangeB={(v) => setResultModal({ ...resultModal, set1B: v })} />
-              <SetRow label="Set 2" valA={resultModal.set2A} valB={resultModal.set2B} onChangeA={(v) => setResultModal({ ...resultModal, set2A: v })} onChangeB={(v) => setResultModal({ ...resultModal, set2B: v })} />
-              <SetRow label="Set 3" valA={resultModal.set3A} valB={resultModal.set3B} onChangeA={(v) => setResultModal({ ...resultModal, set3A: v })} onChangeB={(v) => setResultModal({ ...resultModal, set3B: v })} />
+              {!isPickleballLogic && (
+                <>
+                  <SetRow label="Set 1" valA={resultModal.set1A} valB={resultModal.set1B} onChangeA={(v) => setResultModal({ ...resultModal, set1A: v })} onChangeB={(v) => setResultModal({ ...resultModal, set1B: v })} />
+                  <SetRow label="Set 2" valA={resultModal.set2A} valB={resultModal.set2B} onChangeA={(v) => setResultModal({ ...resultModal, set2A: v })} onChangeB={(v) => setResultModal({ ...resultModal, set2B: v })} />
+                  <SetRow label="Set 3" valA={resultModal.set3A} valB={resultModal.set3B} onChangeA={(v) => setResultModal({ ...resultModal, set3A: v })} onChangeB={(v) => setResultModal({ ...resultModal, set3B: v })} />
+                </>
+              )}
+              {isPickleballLogic && (
+                <SetRow label="Único Set" valA={resultModal.set1A} valB={resultModal.set1B} onChangeA={(v) => setResultModal({ ...resultModal, set1A: v })} onChangeB={(v) => setResultModal({ ...resultModal, set1B: v })} />
+              )}
               
               {isRacquetball3Of5 && (
                 <>
@@ -659,13 +670,13 @@ const BracketDetails: React.FC = () => {
               }}>
                 <div style={{ textAlign: 'left' }}>
                   <div style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>
-                    {(parseInt(resultModal.set1A) || 0) + (parseInt(resultModal.set2A) || 0) + (parseInt(resultModal.set3A) || 0) + (isRacquetball3Of5 ? (parseInt(resultModal.set4A) || 0) + (parseInt(resultModal.set5A) || 0) : 0)}
+                    {isPickleballLogic ? (parseInt(resultModal.set1A) || 0) : (parseInt(resultModal.set1A) || 0) + (parseInt(resultModal.set2A) || 0) + (parseInt(resultModal.set3A) || 0) + (isRacquetball3Of5 ? (parseInt(resultModal.set4A) || 0) + (parseInt(resultModal.set5A) || 0) : 0)}
                   </div>
                 </div>
                 <div style={{ fontSize: '0.8rem', opacity: 0.3 }}>TOTAL PUNTOS</div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>
-                    {(parseInt(resultModal.set1B) || 0) + (parseInt(resultModal.set2B) || 0) + (parseInt(resultModal.set3B) || 0) + (isRacquetball3Of5 ? (parseInt(resultModal.set4B) || 0) + (parseInt(resultModal.set5B) || 0) : 0)}
+                    {isPickleballLogic ? (parseInt(resultModal.set1B) || 0) : (parseInt(resultModal.set1B) || 0) + (parseInt(resultModal.set2B) || 0) + (parseInt(resultModal.set3B) || 0) + (isRacquetball3Of5 ? (parseInt(resultModal.set4B) || 0) + (parseInt(resultModal.set5B) || 0) : 0)}
                   </div>
                 </div>
               </div>
@@ -726,7 +737,7 @@ const BracketDetails: React.FC = () => {
 
                   const setsWinA = sets.filter(s => s.a > s.b).length;
                   const setsWinB = sets.filter(s => s.b > s.a).length;
-                  const requiredSets = isRacquetball3Of5 ? 3 : 2;
+                  const requiredSets = isPickleballLogic ? 1 : (isRacquetball3Of5 ? 3 : 2);
 
                   if (setsWinA < requiredSets && setsWinB < requiredSets) {
                     setConfirmModal({
@@ -769,6 +780,15 @@ const BracketDetails: React.FC = () => {
                         setConfirmModal({ show: true, title: 'Error en sets', message: 'Ganó 3-1: set 5 debe ser 0-0.', onConfirm: () => { } });
                         return;
                       }
+                    }
+                  } else if (isPickleballLogic) {
+                    if (s1A === s1B && s1A + s1B > 0) {
+                      setConfirmModal({ show: true, title: 'Empate no permitido', message: 'No se permiten empates en Pickleball.', onConfirm: () => { } });
+                      return;
+                    }
+                    if (Math.max(s1A, s1B) < 7) {
+                      setConfirmModal({ show: true, title: 'Puntuación mínima insuficiente', message: 'El ganador del set debe alcanzar al menos 7 puntos.', onConfirm: () => { } });
+                      return;
                     }
                   }
 
