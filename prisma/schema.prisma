@@ -87,7 +87,7 @@ model Match {
   id        String   @id @default(cuid())
   groupId   String
   pairAId   String
-  pairBId   String
+  pairBId   String?
   pairA2Id  String?
   pairB2Id  String?
   winnerId  String?
@@ -104,13 +104,11 @@ model Match {
   set5A     Int      @default(0)
   set5B     Int      @default(0)
   createdAt DateTime @default(now())
-  pairB     Pair     @relation("PairBMatches", fields: [pairBId], references: [id], onDelete: Cascade)
+  pairB     Pair?    @relation("PairBMatches", fields: [pairBId], references: [id], onDelete: Cascade)
   pairA     Pair     @relation("PairAMatches", fields: [pairAId], references: [id], onDelete: Cascade)
   pairA2    Pair?    @relation("PairA2Matches", fields: [pairA2Id], references: [id])
   pairB2    Pair?    @relation("PairB2Matches", fields: [pairB2Id], references: [id])
   group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
-
-  @@unique([groupId, pairAId, pairBId])
 }
 
 model BracketMatch {

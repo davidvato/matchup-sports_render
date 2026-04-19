@@ -740,7 +740,7 @@ app.post('/api/groups/:id/pairs/batch', async (req, res) => {
                   groupId,
                   pairAId: allPairs[i].id,
                   pairA2Id: allPairs[partner].id,
-                  pairBId: '', // We'll use empty string or specific logic in frontend to show --
+                  pairBId: null, // Use null for sit-out
                   pointsA: 0,
                   pointsB: 0,
                   winnerId: 'SITOUT' // Specific marker
