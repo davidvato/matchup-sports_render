@@ -613,10 +613,14 @@ const GroupDetails: React.FC = () => {
                           <span style={{ fontWeight: match.winnerId === match.pairA.id ? 'bold' : 'normal', color: match.winnerId === match.pairA.id ? 'var(--primary)' : 'inherit' }}>
                             {match.pairA.name}{match.pairA2 ? ` / ${match.pairA2.name}` : ''}
                           </span>
-                          <span style={{ margin: '0 10px', opacity: 0.3 }}>vs</span>
-                          <span style={{ fontWeight: match.winnerId === match.pairB?.id ? 'bold' : 'normal', color: match.winnerId === match.pairB?.id ? 'var(--primary)' : 'inherit' }}>
-                            {match.pairB?.name || '--'}{match.pairB2 ? ` / ${match.pairB2.name}` : ''}
-                          </span>
+                          {match.winnerId !== 'SITOUT' && (
+                            <>
+                              <span style={{ margin: '0 10px', opacity: 0.3 }}>vs</span>
+                              <span style={{ fontWeight: match.winnerId === match.pairB?.id ? 'bold' : 'normal', color: match.winnerId === match.pairB?.id ? 'var(--primary)' : 'inherit' }}>
+                                {match.pairB?.name || '--'}{match.pairB2 ? ` / ${match.pairB2.name}` : ''}
+                              </span>
+                            </>
+                          )}
                         </td>
                         <td style={{ padding: '15px 12px', textAlign: 'center', fontWeight: 'bold' }}>
                           {match.winnerId ? (

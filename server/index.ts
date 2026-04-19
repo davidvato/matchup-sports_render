@@ -321,7 +321,9 @@ app.get('/api/groups/:id', async (req, res) => {
         matches: {
           include: {
             pairA: true,
-            pairB: true
+            pairA2: true,
+            pairB: true,
+            pairB2: true
           }
         }
       }
@@ -669,85 +671,81 @@ app.post('/api/groups/:id/pairs/batch', async (req, res) => {
       const isPickleball = group.category.tournament.sport?.toLowerCase() === 'pickleball';
 
       if (isPickleball) {
-        // Multi-Doubles Rotation Algorithm (Social Doubles)
         const N = allPairs.length;
-        const indices = Array.from({ length: N }, (_, i) => i);
-        
-        // Strategy: 
-        // For N players, we want to generate matches of (p1, p2) vs (p3, p4).
-        // A simple rotation for N players can generate N rounds.
-        // For each round i:
-        // Partner player j with player (j + i) % N.
-        
-        const generatedMatches = new Set<string>();
+        if (N < 2) return { success: true };
 
-        // We want every player to partner with every other player exactly once.
-        // There are (N-1) possible partners for each player.
-        // In each match, we use 2 player-partnerships.
-        
-        for (let partnerOffset = 1; partnerOffset < N; partnerOffset++) {
-          const usedInRound = new Set<number>();
-          for (let i = 0; i < N; i++) {
-            if (usedInRound.has(i)) continue;
-            const partner = (i + partnerOffset) % N;
-            if (usedInRound.has(partner)) continue;
+        if (N % 2 !== 0) {
+          // N is odd (e.g., 5 players)
+          for (let r = 0; r < N; r++) {
+            const pA1 = (r + 1) % N;
+            const pA2 = (r + 4) % N;
+            const pB1 = (r + 2) % N;
+            const pB2 = (r + 3) % N;
 
-            // We have a pair (i, partner). Now we need an opponent pair.
-            // Let's find the next available pair.
-            let opponent1 = -1;
-            let opponent2 = -1;
-            for (let k = 0; k < N; k++) {
-              if (usedInRound.has(k) || k === i || k === partner) continue;
-              const kPartner = (k + partnerOffset) % N;
-              if (usedInRound.has(kPartner) || kPartner === i || kPartner === partner || kPartner === k) continue;
-              
-              opponent1 = k;
-              opponent2 = kPartner;
-              break;
-            }
-
-            if (opponent1 !== -1) {
-              // Create Match: (i, partner) vs (opponent1, opponent2)
-              const pA1 = allPairs[i].id;
-              const pA2 = allPairs[partner].id;
-              const pB1 = allPairs[opponent1].id;
-              const pB2 = allPairs[opponent2].id;
-
-              // Avoid duplicates
-              const matchKey = [pA1, pA2, pB1, pB2].sort().join('-');
-              if (!generatedMatches.has(matchKey)) {
-                await tx.match.create({
-                  data: {
-                    groupId,
-                    pairAId: pA1,
-                    pairA2Id: pA2,
-                    pairBId: pB1,
-                    pairB2Id: pB2
-                  }
-                });
-                generatedMatches.add(matchKey);
+            await tx.match.create({
+              data: {
+                groupId,
+                pairAId: allPairs[pA1].id,
+                pairA2Id: allPairs[pA2].id,
+                pairBId: allPairs[pB1].id,
+                pairB2Id: allPairs[pB2].id
               }
-              usedInRound.add(i);
-              usedInRound.add(partner);
-              usedInRound.add(opponent1);
-              usedInRound.add(opponent2);
-            } else {
-              // This pair (i, partner) has no opponent. It's a Sit-out (Descanso).
-              // The user wants: "crea el juego y marcalo en rojo, de contrincante ponle dos guiones, marcador 0-0"
-              // We'll create a match with only Side A filled. Side B is null.
+            });
+
+            // Sit-out for player r
+            await tx.match.create({
+              data: {
+                groupId,
+                pairAId: allPairs[r].id,
+                pairBId: null,
+                winnerId: 'SITOUT'
+              }
+            });
+          }
+        } else {
+          // N is even
+          if (N === 4) {
+            const rounds = [
+              [[0, 1], [2, 3]],
+              [[0, 2], [1, 3]],
+              [[0, 3], [1, 2]]
+            ];
+            for (const rd of rounds) {
               await tx.match.create({
                 data: {
                   groupId,
-                  pairAId: allPairs[i].id,
-                  pairA2Id: allPairs[partner].id,
-                  pairBId: null, // Use null for sit-out
-                  pointsA: 0,
-                  pointsB: 0,
-                  winnerId: 'SITOUT' // Specific marker
+                  pairAId: allPairs[rd[0][0]].id,
+                  pairA2Id: allPairs[rd[0][1]].id,
+                  pairBId: allPairs[rd[1][0]].id,
+                  pairB2Id: allPairs[rd[1][1]].id
                 }
               });
-              usedInRound.add(i);
-              usedInRound.add(partner);
+            }
+          } else {
+            // N=6, 8... Fallback
+            const generatedMatches = new Set<string>();
+            for (let i = 0; i < N; i++) {
+              for (let j = i + 1; j < N; j++) {
+                for (let k = 0; k < N; k++) {
+                  if (k === i || k === j) continue;
+                  for (let l = k + 1; l < N; l++) {
+                    if (l === i || l === j) continue;
+                    const key = [allPairs[i].id, allPairs[j].id, allPairs[k].id, allPairs[l].id].sort().join('-');
+                    if (!generatedMatches.has(key)) {
+                      await tx.match.create({
+                        data: {
+                          groupId,
+                          pairAId: allPairs[i].id,
+                          pairA2Id: allPairs[j].id,
+                          pairBId: allPairs[k].id,
+                          pairB2Id: allPairs[l].id
+                        }
+                      });
+                      generatedMatches.add(key);
+                    }
+                  }
+                }
+              }
             }
           }
         }
