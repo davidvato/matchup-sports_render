@@ -702,7 +702,12 @@ const BracketDetails: React.FC = () => {
                   const s3B = parseInt(resultModal.set3B)||0;
 
                   if ((s1A === s1B && s1A+s1B>0) || (s2A === s2B && s2A+s2B>0) || (s3A === s3B && s3A+s3B>0)) {
-                    alert("No se permiten empates en los sets.");
+                    setConfirmModal({
+                      show: true,
+                      title: 'Empate no permitido en sets',
+                      message: 'No se permiten empates en los sets individuales en Racquetball.',
+                      onConfirm: () => {}
+                    });
                     return;
                   }
 
@@ -710,19 +715,34 @@ const BracketDetails: React.FC = () => {
                   const setsB = (s1B > s1A ? 1 : 0) + (s2B > s2A ? 1 : 0) + (s3B > s3A ? 1 : 0);
 
                   if (setsA < 2 && setsB < 2) {
-                    alert("Un jugador debe ganar al menos 2 sets.");
+                    setConfirmModal({
+                      show: true,
+                      title: 'Jugador debe ganar 2 sets',
+                      message: 'Un jugador debe ganar al menos 2 sets para registrar el resultado.',
+                      onConfirm: () => {}
+                    });
                     return;
                   }
 
                   const winner20 = (s1A > s1B && s2A > s2B) || (s1B > s1A && s2B > s2A);
                   if (winner20 && (s3A !== 0 || s3B !== 0)) {
-                    alert("Si un jugador ganó los primeros 2 sets, el 3er set debe quedar 0-0.");
+                    setConfirmModal({
+                      show: true,
+                      title: 'Error en 3er Set',
+                      message: 'Si un jugador ganó los primeros 2 sets, el 3er set debe quedar 0-0.',
+                      onConfirm: () => {}
+                    });
                     return;
                   }
                   
                   const tieBreakerNeeded = (s1A > s1B && s2B > s2A) || (s1B > s1A && s2A > s2B);
                   if (tieBreakerNeeded && s3A === 0 && s3B === 0) {
-                    alert("El tercer set es obligatorio ya que van 1-1.");
+                    setConfirmModal({
+                      show: true,
+                      title: '3er Set Obligatorio',
+                      message: 'El tercer set es obligatorio ya que los jugadores están empatados 1-1 en sets.',
+                      onConfirm: () => {}
+                    });
                     return;
                   }
 

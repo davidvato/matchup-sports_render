@@ -905,7 +905,12 @@ const GroupDetails: React.FC = () => {
 
                     // Validación de empates en sets
                     if ((s1A === s1B && s1A + s1B > 0) || (s2A === s2B && s2A + s2B > 0) || (s3A === s3B && s3A + s3B > 0)) {
-                      alert("No se permiten empates en los sets.");
+                      setConfirmModal({
+                        show: true,
+                        title: 'Empate no permitido en sets',
+                        message: 'No se permiten empates en los sets individuales en Racquetball.',
+                        onConfirm: () => {}
+                      });
                       return;
                     }
 
@@ -914,21 +919,36 @@ const GroupDetails: React.FC = () => {
                     const setsB = (s1B > s1A ? 1 : 0) + (s2B > s2A ? 1 : 0) + (s3B > s3A ? 1 : 0);
 
                     if (setsA < 2 && setsB < 2) {
-                      alert("Un jugador debe ganar al menos 2 sets.");
+                      setConfirmModal({
+                        show: true,
+                        title: 'Jugador debe ganar 2 sets',
+                        message: 'Un jugador debe ganar al menos 2 sets para registrar el resultado.',
+                        onConfirm: () => {}
+                      });
                       return;
                     }
 
                     // Si alguien ganó 2-0, el 3er set debe ser 0-0
                     const winner20 = (s1A > s1B && s2A > s2B) || (s1B > s1A && s2B > s2A);
                     if (winner20 && (s3A !== 0 || s3B !== 0)) {
-                      alert("Si un jugador ganó los primeros 2 sets, el 3er set debe quedar 0-0.");
+                      setConfirmModal({
+                        show: true,
+                        title: 'Error en 3er Set',
+                        message: 'Si un jugador ganó los primeros 2 sets, el 3er set debe quedar 0-0.',
+                        onConfirm: () => {}
+                      });
                       return;
                     }
                     
                     // Si van 1-1, el 3er set es obligatorio
                     const tieBreakerNeeded = (s1A > s1B && s2B > s2A) || (s1B > s1A && s2A > s2B);
                     if (tieBreakerNeeded && s3A === 0 && s3B === 0) {
-                      alert("El tercer set es obligatorio ya que van 1-1.");
+                      setConfirmModal({
+                        show: true,
+                        title: '3er Set Obligatorio',
+                        message: 'El tercer set es obligatorio ya que los jugadores están empatados 1-1 en sets.',
+                        onConfirm: () => {}
+                      });
                       return;
                     }
 
@@ -1005,7 +1025,7 @@ const GroupDetails: React.FC = () => {
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
           backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center',
-          justifyContent: 'center', zIndex: 3100, padding: '2rem', backdropFilter: 'blur(8px)'
+          justifyContent: 'center', zIndex: 5000, padding: '2rem', backdropFilter: 'blur(8px)'
         }}>
           <div className="glass-card fadeIn" style={{ 
             padding: '3rem', maxWidth: '450px', width: '100%', 
