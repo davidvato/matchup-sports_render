@@ -646,11 +646,26 @@ const TournamentDetails: React.FC = () => {
                     <h3 style={{ opacity: 0.5, marginBottom: '2rem' }}>No hay estructura definida para esta categoría</h3>
                     {isAdmin && currentCategory && (
                       <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center' }}>
-                        <button onClick={() => handleAddGroup(currentCategory.id)} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <button 
+                          onClick={() => handleAddGroup(currentCategory.id)} 
+                          className="btn-primary" 
+                          style={{ display: 'flex', alignItems: 'center', gap: '10px' }}
+                        >
                           <Users size={18} /> Crear Fase de Grupos
                         </button>
-                        <button onClick={() => handleAddBracket(currentCategory.id)} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <Trophy size={18} /> Crear Brackets
+                        <button 
+                          onClick={() => handleAddBracket(currentCategory.id)} 
+                          className="btn-primary" 
+                          disabled={tournament?.sport === 'Pickleball'}
+                          style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '10px',
+                            opacity: tournament?.sport === 'Pickleball' ? 0.4 : 1,
+                            cursor: tournament?.sport === 'Pickleball' ? 'not-allowed' : 'pointer'
+                          }}
+                        >
+                          <Trophy size={18} /> Crear Brackets {tournament?.sport === 'Pickleball' && '(No disponible)'}
                         </button>
                       </div>
                     )}
@@ -658,8 +673,23 @@ const TournamentDetails: React.FC = () => {
             ) : (
               isAdmin && currentCategory && (
                 <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-                   <button onClick={() => handleAddGroup(currentCategory.id)} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem' }}>+ Añadir Grupo</button>
-                   <button onClick={() => handleAddBracket(currentCategory.id)} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem' }}>+ Añadir Bracket</button>
+                    <button onClick={() => handleAddGroup(currentCategory.id)} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem' }}>+ Añadir Grupo</button>
+                    <button 
+                      onClick={() => handleAddBracket(currentCategory.id)} 
+                      disabled={tournament?.sport === 'Pickleball'}
+                      style={{ 
+                        background: 'none', 
+                        border: '1px solid rgba(255,255,255,0.1)', 
+                        color: 'white', 
+                        padding: '0.5rem 1rem', 
+                        borderRadius: '8px', 
+                        cursor: tournament?.sport === 'Pickleball' ? 'not-allowed' : 'pointer', 
+                        fontSize: '0.8rem',
+                        opacity: tournament?.sport === 'Pickleball' ? 0.3 : 1
+                      }}
+                    >
+                      + Añadir Bracket {tournament?.sport === 'Pickleball' && '(No disponible)'}
+                    </button>
                 </div>
               )
             )}

@@ -77,6 +77,9 @@ model Pair {
   bracketMatchesAsA BracketMatch[] @relation("BPairAMatches")
   bracketMatchesAsB BracketMatch[] @relation("BPairBMatches")
 
+  matchesAsA2  Match[] @relation("PairA2Matches")
+  matchesAsB2  Match[] @relation("PairB2Matches")
+
   @@unique([categoryId, name])
 }
 
@@ -85,6 +88,8 @@ model Match {
   groupId   String
   pairAId   String
   pairBId   String
+  pairA2Id  String?
+  pairB2Id  String?
   winnerId  String?
   pointsA   Int      @default(0)
   pointsB   Int      @default(0)
@@ -101,6 +106,8 @@ model Match {
   createdAt DateTime @default(now())
   pairB     Pair     @relation("PairBMatches", fields: [pairBId], references: [id], onDelete: Cascade)
   pairA     Pair     @relation("PairAMatches", fields: [pairAId], references: [id], onDelete: Cascade)
+  pairA2    Pair?    @relation("PairA2Matches", fields: [pairA2Id], references: [id])
+  pairB2    Pair?    @relation("PairB2Matches", fields: [pairB2Id], references: [id])
   group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   @@unique([groupId, pairAId, pairBId])

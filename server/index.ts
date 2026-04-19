@@ -557,7 +557,21 @@ app.post('/api/matches/:id/result', async (req, res) => {
           set5A: set5A || 0,
           set5B: set5B || 0
         },
-        include: { group: { include: { category: { include: { tournament: true } } } } }
+        include: { 
+          group: { 
+            include: { 
+              category: { 
+                include: { 
+                  tournament: true 
+                } 
+              } 
+            } 
+          },
+          pairA: true,
+          pairA2: true,
+          pairB: true,
+          pairB2: true
+        }
       });
 
       const sport = match.group.category.tournament.sport?.toLowerCase();
@@ -565,59 +579,53 @@ app.post('/api/matches/:id/result', async (req, res) => {
       const calculateStats = (matches: any[], pairId: string, currentSport: string | undefined) => {
         return matches.reduce((total, m) => {
           const isPlayed = !!m.winnerId;
-          if (!isPlayed && m.pointsA === 0 && m.pointsB === 0) return total; // Match not played (initial state)
+          const isSitOut = !m.pairBId;
+          if (isSitOut) return total; // Ignore sit-out matches in stats
+          if (!isPlayed && m.pointsA === 0 && m.pointsB === 0) return total;
+
+          const isSideA = m.pairAId === pairId || m.pairA2Id === pairId;
+          const isSideB = m.pairBId === pairId || m.pairB2Id === pairId;
+          if (!isSideA && !isSideB) return total;
 
           if (currentSport === 'futbol') {
-            const isPairA = m.pairAId === pairId;
-            const myPoints = isPairA ? m.pointsA : m.pointsB;
-            const opponentPoints = isPairA ? m.pointsB : m.pointsA;
-
+            const myPoints = isSideA ? m.pointsA : m.pointsB;
+            const opponentPoints = isSideA ? m.pointsB : m.pointsA;
             if (myPoints > opponentPoints) return total + 3;
             if (myPoints === opponentPoints) return total + 1;
             return total;
           } else if (currentSport === 'basquetball') {
-            const isPairA = m.pairAId === pairId;
-            const myPoints = isPairA ? m.pointsA : m.pointsB;
-            const opponentPoints = isPairA ? m.pointsB : m.pointsA;
-
+            const myPoints = isSideA ? m.pointsA : m.pointsB;
+            const opponentPoints = isSideA ? m.pointsB : m.pointsA;
             if (myPoints > opponentPoints) return total + 2;
             return total;
-          } else if (currentSport === 'racquetball') {
-            const isPairA = m.pairAId === pairId;
-            const myPoints = isPairA ? m.pointsA : m.pointsB;
-            const opponentPoints = isPairA ? m.pointsB : m.pointsA;
-            // Pts = PF - PC
+          } else if (currentSport === 'racquetball' || currentSport === 'pickleball') {
+            const myPoints = isSideA ? m.pointsA : m.pointsB;
+            const opponentPoints = isSideA ? m.pointsB : m.pointsA;
             return total + (myPoints - opponentPoints);
           } else {
-            // Default: sum of points scored
-            return total + (m.pairAId === pairId ? m.pointsA : m.pointsB);
+            return total + (isSideA ? m.pointsA : m.pointsB);
           }
         }, 0);
       };
 
-      // 2. Recalculate totalScore for Pair A
-      const matchesA_all = await tx.match.findMany({
-        where: { OR: [{ pairAId }, { pairBId: pairAId }] }
-      });
-      
-      const totalA = calculateStats(matchesA_all, pairAId, sport);
+      // 2. Recalculate totalScore for all involved participants
+      const involvedIds = [pairAId, match.pairA2Id, pairBId, match.pairB2Id].filter(id => !!id) as string[];
 
-      await tx.pair.update({
-        where: { id: pairAId },
-        data: { totalScore: totalA }
-      });
-
-      // 3. Recalculate totalScore for Pair B
-      const matchesB_all = await tx.match.findMany({
-        where: { OR: [{ pairAId: pairBId }, { pairBId }] }
-      });
-      
-      const totalB = calculateStats(matchesB_all, pairBId, sport);
-
-      await tx.pair.update({
-        where: { id: pairBId },
-        data: { totalScore: totalB }
-      });
+      for (const pId of involvedIds) {
+        const matches_all = await tx.match.findMany({
+          where: { 
+            OR: [
+              { pairAId: pId }, { pairA2Id: pId },
+              { pairBId: pId }, { pairB2Id: pId }
+            ] 
+          }
+        });
+        const total = calculateStats(matches_all, pId, sport);
+        await tx.pair.update({
+          where: { id: pId },
+          data: { totalScore: total }
+        });
+      }
     });
     res.json({ success: true });
   } catch (error) {
@@ -653,29 +661,121 @@ app.post('/api/groups/:id/pairs/batch', async (req, res) => {
         where: { groupId }
       });
 
-      // 3. Generate matches that don't already exist
-      for (let i = 0; i < allPairs.length; i++) {
-        for (let j = i + 1; j < allPairs.length; j++) {
-          const pairAId = allPairs[i].id;
-          const pairBId = allPairs[j].id;
+      const group = await tx.group.findUnique({
+        where: { id: groupId },
+        include: { category: { include: { tournament: true } } }
+      });
+      if (!group) throw new Error('Group not found');
+      const isPickleball = group.category.tournament.sport?.toLowerCase() === 'pickleball';
 
-          const existingMatch = await tx.match.findFirst({
-            where: {
-              OR: [
-                { pairAId, pairBId, groupId },
-                { pairAId: pairBId, pairBId: pairAId, groupId }
-              ]
+      if (isPickleball) {
+        // Multi-Doubles Rotation Algorithm (Social Doubles)
+        const N = allPairs.length;
+        const indices = Array.from({ length: N }, (_, i) => i);
+        
+        // Strategy: 
+        // For N players, we want to generate matches of (p1, p2) vs (p3, p4).
+        // A simple rotation for N players can generate N rounds.
+        // For each round i:
+        // Partner player j with player (j + i) % N.
+        
+        const generatedMatches = new Set<string>();
+
+        // We want every player to partner with every other player exactly once.
+        // There are (N-1) possible partners for each player.
+        // In each match, we use 2 player-partnerships.
+        
+        for (let partnerOffset = 1; partnerOffset < N; partnerOffset++) {
+          const usedInRound = new Set<number>();
+          for (let i = 0; i < N; i++) {
+            if (usedInRound.has(i)) continue;
+            const partner = (i + partnerOffset) % N;
+            if (usedInRound.has(partner)) continue;
+
+            // We have a pair (i, partner). Now we need an opponent pair.
+            // Let's find the next available pair.
+            let opponent1 = -1;
+            let opponent2 = -1;
+            for (let k = 0; k < N; k++) {
+              if (usedInRound.has(k) || k === i || k === partner) continue;
+              const kPartner = (k + partnerOffset) % N;
+              if (usedInRound.has(kPartner) || kPartner === i || kPartner === partner || kPartner === k) continue;
+              
+              opponent1 = k;
+              opponent2 = kPartner;
+              break;
             }
-          });
 
-          if (!existingMatch) {
-            await tx.match.create({
-              data: {
-                groupId,
-                pairAId,
-                pairBId
+            if (opponent1 !== -1) {
+              // Create Match: (i, partner) vs (opponent1, opponent2)
+              const pA1 = allPairs[i].id;
+              const pA2 = allPairs[partner].id;
+              const pB1 = allPairs[opponent1].id;
+              const pB2 = allPairs[opponent2].id;
+
+              // Avoid duplicates
+              const matchKey = [pA1, pA2, pB1, pB2].sort().join('-');
+              if (!generatedMatches.has(matchKey)) {
+                await tx.match.create({
+                  data: {
+                    groupId,
+                    pairAId: pA1,
+                    pairA2Id: pA2,
+                    pairBId: pB1,
+                    pairB2Id: pB2
+                  }
+                });
+                generatedMatches.add(matchKey);
+              }
+              usedInRound.add(i);
+              usedInRound.add(partner);
+              usedInRound.add(opponent1);
+              usedInRound.add(opponent2);
+            } else {
+              // This pair (i, partner) has no opponent. It's a Sit-out (Descanso).
+              // The user wants: "crea el juego y marcalo en rojo, de contrincante ponle dos guiones, marcador 0-0"
+              // We'll create a match with only Side A filled. Side B is null.
+              await tx.match.create({
+                data: {
+                  groupId,
+                  pairAId: allPairs[i].id,
+                  pairA2Id: allPairs[partner].id,
+                  pairBId: '', // We'll use empty string or specific logic in frontend to show --
+                  pointsA: 0,
+                  pointsB: 0,
+                  winnerId: 'SITOUT' // Specific marker
+                }
+              });
+              usedInRound.add(i);
+              usedInRound.add(partner);
+            }
+          }
+        }
+      } else {
+        // Standard Round-robin
+        for (let i = 0; i < allPairs.length; i++) {
+          for (let j = i + 1; j < allPairs.length; j++) {
+            const pairAId = allPairs[i].id;
+            const pairBId = allPairs[j].id;
+
+            const existingMatch = await tx.match.findFirst({
+              where: {
+                OR: [
+                  { pairAId, pairBId, groupId },
+                  { pairAId: pairBId, pairBId: pairAId, groupId }
+                ]
               }
             });
+
+            if (!existingMatch) {
+              await tx.match.create({
+                data: {
+                  groupId,
+                  pairAId,
+                  pairBId
+                }
+              });
+            }
           }
         }
       }

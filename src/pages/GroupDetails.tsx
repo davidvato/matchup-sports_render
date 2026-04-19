@@ -373,14 +373,15 @@ const GroupDetails: React.FC = () => {
 
     group.matches.forEach(m => {
       if (!m.winnerId) return;
+      if (m.winnerId === 'SITOUT') return; // Ignore sit-out matches in stats
 
-      const isPairA = m.pairA.id === pairId;
-      const isPairB = m.pairB.id === pairId;
-      if (!isPairA && !isPairB) return;
+      const isSideA = m.pairAId === pairId || m.pairA2Id === pairId;
+      const isSideB = m.pairBId === pairId || m.pairB2Id === pairId;
+      if (!isSideA && !isSideB) return;
 
       stats.pj++;
-      const selfPoints = isPairA ? m.pointsA : m.pointsB;
-      const oppPoints = isPairA ? m.pointsB : m.pointsA;
+      const selfPoints = isSideA ? m.pointsA : m.pointsB;
+      const oppPoints = isSideA ? m.pointsB : m.pointsA;
 
       stats.pf += selfPoints;
       stats.pc += oppPoints;
@@ -505,8 +506,8 @@ const GroupDetails: React.FC = () => {
                           }
 
                           const match = group.matches.find(m =>
-                            (m.pairA.id === rowPair.id && m.pairB.id === colPair.id) ||
-                            (m.pairA.id === colPair.id && m.pairB.id === rowPair.id)
+                            ((m.pairAId === rowPair.id || m.pairA2Id === rowPair.id) && (m.pairBId === colPair.id || m.pairB2Id === colPair.id)) ||
+                            ((m.pairAId === colPair.id || m.pairA2Id === colPair.id) && (m.pairBId === rowPair.id || m.pairB2Id === rowPair.id))
                           );
 
                           if (!match) return <td key={colPair.id} style={{ border: '1px solid rgba(255,255,255,0.05)' }}></td>;
@@ -520,24 +521,25 @@ const GroupDetails: React.FC = () => {
                               key={colPair.id}
                               onClick={() => {
                                 if (isAdmin) {
-                                  const isRowPairA = match.pairA.id === rowPair.id;
+                                  if (match.winnerId === 'SITOUT') return;
+                                  const isSideA = match.pairAId === rowPair.id || match.pairA2Id === rowPair.id;
                                   setResultModal({
                                     show: true,
                                     match,
                                     rowPair,
                                     colPair,
-                                    scoreRow: String(isRowPairA ? match.pointsA : match.pointsB),
-                                    scoreCol: String(isRowPairA ? match.pointsB : match.pointsA),
-                                    set1Row: String(isRowPairA ? match.set1A : match.set1B),
-                                    set1Col: String(isRowPairA ? match.set1B : match.set1A),
-                                    set2Row: String(isRowPairA ? match.set2A : match.set2B),
-                                    set2Col: String(isRowPairA ? match.set2B : match.set2A),
-                                    set3Row: String(isRowPairA ? match.set3A : match.set3B),
-                                    set3Col: String(isRowPairA ? match.set3B : match.set3A),
-                                    set4Row: String(isRowPairA ? match.set4A : match.set4B),
-                                    set4Col: String(isRowPairA ? match.set4B : match.set4A),
-                                    set5Row: String(isRowPairA ? match.set5A : match.set5B),
-                                    set5Col: String(isRowPairA ? match.set5B : match.set5A)
+                                    scoreRow: String(isSideA ? match.pointsA : match.pointsB),
+                                    scoreCol: String(isSideA ? match.pointsB : match.pointsA),
+                                    set1Row: String(isSideA ? match.set1A : match.set1B),
+                                    set1Col: String(isSideA ? match.set1B : match.set1A),
+                                    set2Row: String(isSideA ? match.set2A : match.set2B),
+                                    set2Col: String(isSideA ? match.set2B : match.set2A),
+                                    set3Row: String(isSideA ? match.set3A : match.set3B),
+                                    set3Col: String(isSideA ? match.set3B : match.set3A),
+                                    set4Row: String(isSideA ? match.set4A : match.set4B),
+                                    set4Col: String(isSideA ? match.set4B : match.set4A),
+                                    set5Row: String(isSideA ? match.set5A : match.set5B),
+                                    set5Col: String(isSideA ? match.set5B : match.set5A)
                                   });
                                 }
                               }}
@@ -607,10 +609,14 @@ const GroupDetails: React.FC = () => {
                   <tbody>
                     {group?.matches.map(match => (
                       <tr key={match.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                        <td style={{ padding: '15px 12px' }}>
-                          <span style={{ fontWeight: match.winnerId === match.pairA.id ? 'bold' : 'normal', color: match.winnerId === match.pairA.id ? 'var(--primary)' : 'inherit' }}>{match.pairA.name}</span>
+                        <td style={{ padding: '15px 12px', background: match.winnerId === 'SITOUT' ? 'rgba(255, 75, 43, 0.1)' : 'transparent' }}>
+                          <span style={{ fontWeight: match.winnerId === match.pairA.id ? 'bold' : 'normal', color: match.winnerId === match.pairA.id ? 'var(--primary)' : 'inherit' }}>
+                            {match.pairA.name}{match.pairA2 ? ` / ${match.pairA2.name}` : ''}
+                          </span>
                           <span style={{ margin: '0 10px', opacity: 0.3 }}>vs</span>
-                          <span style={{ fontWeight: match.winnerId === match.pairB.id ? 'bold' : 'normal', color: match.winnerId === match.pairB.id ? 'var(--primary)' : 'inherit' }}>{match.pairB.name}</span>
+                          <span style={{ fontWeight: match.winnerId === match.pairB?.id ? 'bold' : 'normal', color: match.winnerId === match.pairB?.id ? 'var(--primary)' : 'inherit' }}>
+                            {match.pairB?.name || '--'}{match.pairB2 ? ` / ${match.pairB2.name}` : ''}
+                          </span>
                         </td>
                         <td style={{ padding: '15px 12px', textAlign: 'center', fontWeight: 'bold' }}>
                           {match.winnerId ? (
@@ -635,7 +641,9 @@ const GroupDetails: React.FC = () => {
                           ) : '-- : --'}
                         </td>
                         <td style={{ padding: '15px 12px', textAlign: 'right' }}>
-                          {match.winnerId ? (
+                          {match.winnerId === 'SITOUT' ? (
+                            <span style={{ fontSize: '0.75rem', background: 'rgba(255, 75, 43, 0.2)', color: '#ff4b2b', padding: '4px 10px', borderRadius: '12px', fontWeight: 'bold' }}>Descanso</span>
+                          ) : match.winnerId ? (
                             <span style={{ fontSize: '0.75rem', background: 'rgba(74, 222, 128, 0.1)', color: '#4ade80', padding: '4px 10px', borderRadius: '12px', fontWeight: 'bold' }}>Finalizado</span>
                           ) : (
                             <span style={{ fontSize: '0.75rem', background: 'rgba(255, 255, 255, 0.05)', color: 'rgba(255,255,255,0.3)', padding: '4px 10px', borderRadius: '12px' }}>Pendiente</span>
@@ -858,7 +866,10 @@ const GroupDetails: React.FC = () => {
             {(!isRacquetball2Of3 && !isRacquetball3Of5 && !isPickleballLogic) ? (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2rem', marginBottom: '3rem' }}>
                 <div style={{ flex: 1, textAlign: 'right' }}>
-                  <div style={{ fontSize: '1.2rem', marginBottom: '10px', fontWeight: 'bold' }}>{resultModal.rowPair?.name}</div>
+                  <div style={{ fontSize: '1.2rem', marginBottom: '10px', fontWeight: 'bold' }}>
+                    {resultModal.rowPair?.name}{resultModal.match?.pairA2Id === resultModal.rowPair?.id ? ` / ${resultModal.match?.pairA.name}` : (resultModal.match?.pairAId === resultModal.rowPair?.id ? ` / ${resultModal.match?.pairA2?.name}` : '')}
+                    {resultModal.match?.pairBId === resultModal.rowPair?.id ? ` / ${resultModal.match?.pairB2?.name}` : (resultModal.match?.pairB2Id === resultModal.rowPair?.id ? ` / ${resultModal.match?.pairB?.name}` : '')}
+                  </div>
                   <input
                     type="number"
                     className="input-field"
@@ -870,7 +881,10 @@ const GroupDetails: React.FC = () => {
                 </div>
                 <div style={{ fontSize: '2rem', opacity: 0.3 }}>-</div>
                 <div style={{ flex: 1, textAlign: 'left' }}>
-                  <div style={{ fontSize: '1.2rem', marginBottom: '10px', fontWeight: 'bold' }}>{resultModal.colPair?.name}</div>
+                  <div style={{ fontSize: '1.2rem', marginBottom: '10px', fontWeight: 'bold' }}>
+                    {resultModal.colPair?.name}{resultModal.match?.pairA2Id === resultModal.colPair?.id ? ` / ${resultModal.match?.pairA.name}` : (resultModal.match?.pairAId === resultModal.colPair?.id ? ` / ${resultModal.match?.pairA2?.name}` : '')}
+                    {resultModal.match?.pairBId === resultModal.colPair?.id ? ` / ${resultModal.match?.pairB2?.name}` : (resultModal.match?.pairB2Id === resultModal.colPair?.id ? ` / ${resultModal.match?.pairB?.name}` : '')}
+                  </div>
                   <input
                     type="number"
                     className="input-field"
@@ -954,7 +968,7 @@ const GroupDetails: React.FC = () => {
                   <div style={{ textAlign: 'right' }}>{resultModal.rowPair?.name}</div>
                   <div style={{ textAlign: 'center' }}>Set 1</div>
                   <div style={{ textAlign: 'center' }}>Set 1</div>
-                  <div style={{ textAlign: 'left' }}>{resultModal.colPair?.name}</div>
+                  <div style={{ textAlign: 'left' }}>{resultModal.colPair?.name || '--'}</div>
                 </div>
 
                 <SetRow label="Único Set" valA={resultModal.set1Row} valB={resultModal.set1Col} onChangeA={(v) => setResultModal({ ...resultModal, set1Row: v })} onChangeB={(v) => setResultModal({ ...resultModal, set1Col: v })} />
