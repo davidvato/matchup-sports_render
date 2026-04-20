@@ -506,11 +506,16 @@ const GroupDetails: React.FC = () => {
                           }
 
                           const match = group.matches.find(m =>
-                            ((m.pairAId === rowPair.id || m.pairA2Id === rowPair.id) && (m.pairBId === colPair.id || m.pairB2Id === colPair.id)) ||
-                            ((m.pairAId === colPair.id || m.pairA2Id === colPair.id) && (m.pairBId === rowPair.id || m.pairB2Id === rowPair.id))
+                            (m.pairAId === rowPair.id || m.pairA2Id === rowPair.id || m.pairBId === rowPair.id || m.pairB2Id === rowPair.id) &&
+                            (m.pairAId === colPair.id || m.pairA2Id === colPair.id || m.pairBId === colPair.id || m.pairB2Id === colPair.id)
                           );
 
                           if (!match) return <td key={colPair.id} style={{ border: '1px solid rgba(255,255,255,0.05)' }}></td>;
+
+                          const isTeammate = isPickleballLogic && (
+                            ((match.pairAId === rowPair.id || match.pairA2Id === rowPair.id) && (match.pairAId === colPair.id || match.pairA2Id === colPair.id)) ||
+                            ((match.pairBId === rowPair.id || match.pairB2Id === rowPair.id) && (match.pairBId === colPair.id || match.pairB2Id === colPair.id))
+                          );
 
                           const isWinner = match.winnerId === rowPair.id;
                           const isDraw = match.winnerId === 'DRAW';
@@ -548,11 +553,12 @@ const GroupDetails: React.FC = () => {
                                 textAlign: 'center',
                                 padding: '10px',
                                 cursor: isAdmin ? 'pointer' : 'default',
-                                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                                background: isTeammate ? 'rgba(0, 242, 254, 0.08)' : 'transparent'
                               }}
                               onMouseEnter={(e) => {
                                 if (isAdmin) {
-                                  e.currentTarget.style.background = 'rgba(0, 242, 254, 0.1)';
+                                  e.currentTarget.style.background = isTeammate ? 'rgba(0, 242, 254, 0.2)' : 'rgba(0, 242, 254, 0.1)';
                                   e.currentTarget.style.boxShadow = 'inset 0 0 10px rgba(0, 242, 254, 0.2)';
                                   e.currentTarget.style.transform = 'scale(1.05)';
                                   e.currentTarget.style.zIndex = '10';
@@ -561,7 +567,7 @@ const GroupDetails: React.FC = () => {
                               }}
                               onMouseLeave={(e) => {
                                 if (isAdmin) {
-                                  e.currentTarget.style.background = 'transparent';
+                                  e.currentTarget.style.background = isTeammate ? 'rgba(0, 242, 254, 0.08)' : 'transparent';
                                   e.currentTarget.style.boxShadow = 'none';
                                   e.currentTarget.style.transform = 'scale(1)';
                                   e.currentTarget.style.zIndex = '1';
@@ -570,7 +576,9 @@ const GroupDetails: React.FC = () => {
                             >
                               {isFinished && (
                                 <div style={{ display: 'flex', justifyContent: 'center' }}>
-                                  {isDraw && !isBasketball && !isRacquetball && !isPickleball ? (
+                                  {isTeammate ? (
+                                    <Users size={18} color="#00f2fe" />
+                                  ) : isDraw && !isBasketball && !isRacquetball && !isPickleball ? (
                                     <span style={{ color: '#ffcc00', fontWeight: 'bold', fontSize: '1.2rem' }}>E</span>
                                   ) : (
                                     <Trophy size={20} color={isWinner ? '#4ade80' : '#ff4b2b'} />
@@ -584,6 +592,19 @@ const GroupDetails: React.FC = () => {
                     ))}
                   </tbody>
                 </table>
+                {isPickleballLogic && (
+                  <div style={{ marginTop: '1.5rem', display: 'flex', gap: '20px', fontSize: '0.8rem', opacity: 0.7, justifyContent: 'center', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Trophy size={14} color="#4ade80" /> <span>Ganó (Rival)</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Trophy size={14} color="#ff4b2b" /> <span>Perdió (Rival)</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Users size={14} color="#00f2fe" /> <span>Fueron Pareja</span>
+                    </div>
+                  </div>
+                )}
                 {group?.matches.length === 0 && (
                   <div style={{ padding: '3rem', textAlign: 'center', opacity: 0.4 }}>
                     Asigna al menos 2 jugadores para visualizar la matriz de juegos.
