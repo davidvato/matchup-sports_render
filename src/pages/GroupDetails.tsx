@@ -610,11 +610,16 @@ const GroupDetails: React.FC = () => {
                     {group?.matches.map(match => (
                       <tr key={match.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                         <td style={{ padding: '15px 12px', background: match.winnerId === 'SITOUT' ? 'rgba(255, 75, 43, 0.1)' : 'transparent' }}>
-                          <span style={{ fontWeight: match.winnerId === match.pairA.id ? 'bold' : 'normal', color: match.winnerId === match.pairA.id ? 'var(--primary)' : 'inherit' }}>
-                            {match.pairA.name}{match.pairA2 ? ` / ${match.pairA2.name}` : ''}
-                          </span>
-                          {match.winnerId !== 'SITOUT' && (
+                          {match.winnerId === 'SITOUT' ? (
+                            <span style={{ color: '#ff4b2b', fontWeight: 'bold' }}>
+                              {match.pairA2 ? 'Descansan: ' : 'Descansa: '}
+                              {match.pairA.name}{match.pairA2 ? ` / ${match.pairA2.name}` : ''}
+                            </span>
+                          ) : (
                             <>
+                              <span style={{ fontWeight: match.winnerId === match.pairA.id ? 'bold' : 'normal', color: match.winnerId === match.pairA.id ? 'var(--primary)' : 'inherit' }}>
+                                {match.pairA.name}{match.pairA2 ? ` / ${match.pairA2.name}` : ''}
+                              </span>
                               <span style={{ margin: '0 10px', opacity: 0.3 }}>vs</span>
                               <span style={{ fontWeight: match.winnerId === match.pairB?.id ? 'bold' : 'normal', color: match.winnerId === match.pairB?.id ? 'var(--primary)' : 'inherit' }}>
                                 {match.pairB?.name || '--'}{match.pairB2 ? ` / ${match.pairB2.name}` : ''}

@@ -674,79 +674,66 @@ app.post('/api/groups/:id/pairs/batch', async (req, res) => {
         const N = allPairs.length;
         if (N < 2) return { success: true };
 
-        if (N % 2 !== 0) {
-          // N is odd (e.g., 5 players)
-          for (let r = 0; r < N; r++) {
-            const pA1 = (r + 1) % N;
-            const pA2 = (r + 4) % N;
-            const pB1 = (r + 2) % N;
-            const pB2 = (r + 3) % N;
+        // Circle Method for Round-Robin Partitions
+        const numPlayers = N % 2 === 0 ? N : N + 1;
+        const players = Array.from({ length: numPlayers }, (_, i) => i);
+        const rounds = numPlayers - 1;
 
-            await tx.match.create({
-              data: {
-                groupId,
-                pairAId: allPairs[pA1].id,
-                pairA2Id: allPairs[pA2].id,
-                pairBId: allPairs[pB1].id,
-                pairB2Id: allPairs[pB2].id
-              }
-            });
-
-            // Sit-out for player r
-            await tx.match.create({
-              data: {
-                groupId,
-                pairAId: allPairs[r].id,
-                pairBId: null,
-                winnerId: 'SITOUT'
-              }
-            });
-          }
-        } else {
-          // N is even
-          if (N === 4) {
-            const rounds = [
-              [[0, 1], [2, 3]],
-              [[0, 2], [1, 3]],
-              [[0, 3], [1, 2]]
-            ];
-            for (const rd of rounds) {
+        for (let r = 0; r < rounds; r++) {
+          const roundPairings = [];
+          for (let i = 0; i < numPlayers / 2; i++) {
+            const p1 = players[i];
+            const p2 = players[numPlayers - 1 - i];
+            
+            // Check if any of them is the dummy player (for odd N)
+            if (p1 < N && p2 < N) {
+              roundPairings.push([p1, p2]);
+            } else {
+              // One player sits out (partnered with dummy)
+              const realPlayer = p1 < N ? p1 : p2;
               await tx.match.create({
                 data: {
                   groupId,
-                  pairAId: allPairs[rd[0][0]].id,
-                  pairA2Id: allPairs[rd[0][1]].id,
-                  pairBId: allPairs[rd[1][0]].id,
-                  pairB2Id: allPairs[rd[1][1]].id
+                  pairAId: allPairs[realPlayer].id,
+                  pairBId: null,
+                  winnerId: 'SITOUT'
                 }
               });
             }
-          } else {
-            // N=6, 8... Fallback
-            const generatedMatches = new Set<string>();
-            for (let i = 0; i < N; i++) {
-              for (let j = i + 1; j < N; j++) {
-                for (let k = 0; k < N; k++) {
-                  if (k === i || k === j) continue;
-                  for (let l = k + 1; l < N; l++) {
-                    if (l === i || l === j) continue;
-                    const key = [allPairs[i].id, allPairs[j].id, allPairs[k].id, allPairs[l].id].sort().join('-');
-                    if (!generatedMatches.has(key)) {
-                      await tx.match.create({
-                        data: {
-                          groupId,
-                          pairAId: allPairs[i].id,
-                          pairA2Id: allPairs[j].id,
-                          pairBId: allPairs[k].id,
-                          pairB2Id: allPairs[l].id
-                        }
-                      });
-                      generatedMatches.add(key);
-                    }
-                  }
+          }
+
+          // Partition roundPairings into matches of 2 pairs each
+          for (let i = 0; i < roundPairings.length; i += 2) {
+            if (i + 1 < roundPairings.length) {
+              // A/A2 vs B/B2
+              await tx.match.create({
+                data: {
+                  groupId,
+                  pairAId: allPairs[roundPairings[i][0]].id,
+                  pairA2Id: allPairs[roundPairings[i][1]].id,
+                  pairBId: allPairs[roundPairings[i+1][0]].id,
+                  pairB2Id: allPairs[roundPairings[i+1][1]].id
                 }
-              }
+              });
+            } else {
+              // Leftover pair in this round sits out (as a pair)
+              // We'll record this as a SITOUT match too
+              await tx.match.create({
+                data: {
+                  groupId,
+                  pairAId: allPairs[roundPairings[i][0]].id,
+                  pairA2Id: allPairs[roundPairings[i][1]].id,
+                  pairBId: null,
+                  winnerId: 'SITOUT'
+                }
+              });
             }
+          }
+
+          // Rotate players (fixing the first one)
+          const last = players.pop();
+          if (last !== undefined) {
+            players.splice(1, 0, last);
           }
         }
       } else {
