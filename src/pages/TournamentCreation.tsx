@@ -21,13 +21,14 @@ const TournamentCreation: React.FC = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   // Section 1: Basic Info
   const [name, setName] = useState('');
   const [location, setLocation] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [sport, setSport] = useState('Tenis');
+  const [sport, setSport] = useState('Basquetball');
   const [description, setDescription] = useState('');
   const [showRacquetModal, setShowRacquetModal] = useState(false);
 
@@ -39,11 +40,11 @@ const TournamentCreation: React.FC = () => {
     if (!newCatName.trim()) return;
     setCategories([...categories, {
       name: newCatName,
-      hasGroups: false, // Default to false as requested to remove config
-      groupCount: 0,
-      hasBrackets: false,
-      bracketSize: 0,
-      participants: ['', '']
+      hasGroups: true,
+      groupCount: 1,
+      hasBrackets: true,
+      bracketSize: 4,
+      participants: []
     }]);
     setNewCatName('');
   };
@@ -56,9 +57,7 @@ const TournamentCreation: React.FC = () => {
 
   const handleParticipantChange = (catIdx: number, pIdx: number, value: string) => {
     const newCats = [...categories];
-    const newParticipants = [...newCats[catIdx].participants];
-    newParticipants[pIdx] = value;
-    newCats[catIdx].participants = newParticipants;
+    newCats[catIdx].participants[pIdx] = value;
     setCategories(newCats);
   };
 
@@ -106,8 +105,38 @@ const TournamentCreation: React.FC = () => {
     }
   };
 
-  const nextStep = () => setStep(step + 1);
-  const prevStep = () => setStep(step - 1);
+  const nextStep = () => {
+    if (step === 1) {
+      if (!startDate || !endDate) {
+        setError('Por favor selecciona ambas fechas (inicio y fin).');
+        return;
+      }
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+
+      if (start < today) {
+        setError('La fecha de inicio no puede ser anterior a la fecha actual.');
+        return;
+      }
+      if (end < today) {
+        setError('La fecha de fin no puede ser anterior a la fecha actual.');
+        return;
+      }
+      if (end < start) {
+        setError('La fecha de fin no puede ser anterior a la fecha de inicio.');
+        return;
+      }
+    }
+    setError('');
+    setStep(step + 1);
+  };
+
+  const prevStep = () => {
+    setError('');
+    setStep(step - 1);
+  };
 
   return (
     <div style={{
@@ -178,13 +207,13 @@ const TournamentCreation: React.FC = () => {
                     }}
                   >
                     <option>Basquetball</option>
-                    <option>Front Tenis</option>
+                    <option disabled style={{ color: 'rgba(255,255,255,0.3)' }}>Front Tenis (Próximamente)</option>
                     <option>Futbol</option>
-                    <option>Padel</option>
+                    <option disabled style={{ color: 'rgba(255,255,255,0.3)' }}>Padel (Próximamente)</option>
                     <option>Pickleball</option>
                     <option>Racquetball</option>
-                    <option>Squash</option>
-                    <option>Tenis</option>
+                    <option disabled style={{ color: 'rgba(255,255,255,0.3)' }}>Squash (Próximamente)</option>
+                    <option disabled style={{ color: 'rgba(255,255,255,0.3)' }}>Tenis (Próximamente)</option>
                   </select>
                 </div>
               </div>
@@ -214,18 +243,45 @@ const TournamentCreation: React.FC = () => {
                         3 de 5 sets a 11 puntos, punto directo, con diferencia de dos puntos
                       </button>
                     </div>
-                    <button 
-                      className="btn-primary" 
-                      disabled={!description}
-                      onClick={() => setShowRacquetModal(false)}
-                      style={{ width: '100%', marginTop: '3rem', background: 'var(--primary)', color: '#000' }}
-                    >
-                      Confirmar Selección
-                    </button>
+                    <div style={{ display: 'flex', gap: '1rem', marginTop: '3rem' }}>
+                      <button 
+                        className="btn-primary" 
+                        onClick={() => {
+                          setShowRacquetModal(false);
+                          setSport('Tenis');
+                          setDescription('');
+                        }}
+                        style={{ flex: 1, background: 'rgba(255,255,255,0.05)', color: 'white' }}
+                      >
+                        Cancelar
+                      </button>
+                      <button 
+                        className="btn-primary" 
+                        disabled={!description}
+                        onClick={() => setShowRacquetModal(false)}
+                        style={{ flex: 2, background: 'var(--primary)', color: '#000' }}
+                      >
+                        Confirmar Selección
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
-              <button className="btn-primary" onClick={nextStep} disabled={!name} style={{ width: '100%', marginTop: '3rem', padding: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+              {error && (
+                <div style={{
+                  background: 'rgba(255, 75, 43, 0.1)',
+                  border: '1px solid rgba(255, 75, 43, 0.3)',
+                  color: '#ff4b2b',
+                  padding: '1rem',
+                  borderRadius: '12px',
+                  marginBottom: '2rem',
+                  textAlign: 'center',
+                  fontSize: '0.9rem'
+                }}>
+                  {error}
+                </div>
+              )}
+              <button className="btn-primary" onClick={nextStep} disabled={!name} style={{ width: '100%', marginTop: '1rem', padding: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
                 Continuar a Categorías <ArrowRight size={20} />
               </button>
             </div>

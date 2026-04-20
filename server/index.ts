@@ -52,6 +52,26 @@ app.post('/api/tournaments', async (req, res) => {
   
   // categories: Array of { name, hasGroups, groupCount, hasBrackets, bracketSize, participants }
   
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (startDate) {
+    const start = new Date(startDate);
+    if (start < today) {
+      return res.status(400).json({ success: false, message: 'La fecha de inicio no puede ser anterior a la fecha actual.' });
+    }
+  }
+
+  if (endDate) {
+    const end = new Date(endDate);
+    if (end < today) {
+      return res.status(400).json({ success: false, message: 'La fecha de fin no puede ser anterior a la fecha actual.' });
+    }
+    if (startDate && end < new Date(startDate)) {
+      return res.status(400).json({ success: false, message: 'La fecha de fin no puede ser anterior a la fecha de inicio.' });
+    }
+  }
+
   try {
     const result = await prisma.$transaction(async (tx) => {
       // 1. Create Tournament

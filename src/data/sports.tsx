@@ -10,6 +10,7 @@ export interface SportInfo {
   description: string;
   rules: string[];
   color: string;
+  disabled?: boolean;
 }
 
 export const sportsData: Record<string, SportInfo> = {
@@ -37,7 +38,8 @@ export const sportsData: Record<string, SportInfo> = {
       'El saque se realiza en diagonal desde detrás de la línea de fondo.',
       'Puntuación clásica: 15, 30, 40 y Juego.'
     ],
-    color: '#4facfe'
+    color: '#4facfe',
+    disabled: true
   },
   squash: {
     id: 'squash',
@@ -50,7 +52,8 @@ export const sportsData: Record<string, SportInfo> = {
       'Los jugadores comparten el mismo espacio de juego.',
       'La pelota no puede botar más de una vez en el suelo.'
     ],
-    color: '#ff007c'
+    color: '#ff007c',
+    disabled: true
   },
   padel: {
     id: 'padel',
@@ -63,7 +66,8 @@ export const sportsData: Record<string, SportInfo> = {
       'La puntuación es igual a la del tenis.',
       'La pelota debe tocar el suelo antes de impactar en las paredes.'
     ],
-    color: '#00d2ff'
+    color: '#00d2ff',
+    disabled: true
   },
   pickleball: {
     id: 'pickleball',
@@ -115,6 +119,7 @@ export const sportsData: Record<string, SportInfo> = {
       'El objetivo es que el rival no logre devolver la bola al frontón.',
       'Se compite a un número determinado de tantos o tiempo.'
     ],
-    color: '#f6d365'
+    color: '#f6d365',
+    disabled: true
   }
 };

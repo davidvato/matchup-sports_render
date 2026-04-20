@@ -14,13 +14,13 @@ const Navbar: React.FC = () => {
 
   const sports = [
     { name: 'Basquetball', icon: <Circle size={16} /> },
-    { name: 'Front Tenis', icon: <Repeat size={16} /> },
+    { name: 'Front Tenis', icon: <Repeat size={16} />, disabled: true },
     { name: 'Futbol', icon: <Circle size={16} /> },
-    { name: 'Padel', icon: <Layers size={16} /> },
+    { name: 'Padel', icon: <Layers size={16} />, disabled: true },
     { name: 'Pickleball', icon: <Target size={16} /> },
     { name: 'Racquetball', icon: <Maximize size={16} /> },
-    { name: 'Squash', icon: <Activity size={16} /> },
-    { name: 'Tenis', icon: <Zap size={16} /> }
+    { name: 'Squash', icon: <Activity size={16} />, disabled: true },
+    { name: 'Tenis', icon: <Zap size={16} />, disabled: true }
   ];
 
   return (
@@ -55,7 +55,7 @@ const Navbar: React.FC = () => {
               width: '200px', padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px',
               backgroundColor: '#1a1d23', opacity: 1, border: '1px solid var(--glass-border)'
             }}>
-              {sports.map(sport => (
+              {sports.filter(s => !s.disabled).map(sport => (
                 <Link
                   key={sport.name}
                   to={`/sport/${sport.name.toLowerCase()}`}
