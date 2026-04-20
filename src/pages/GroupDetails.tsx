@@ -474,121 +474,94 @@ const GroupDetails: React.FC = () => {
           </div>
         </header>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: '2.5rem' }}>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            {/* Matches Section: Matrix View */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+          {/* Standings Table (Moved to Center) */}
             <section>
               <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.5rem' }}>
-                <Activity color="var(--primary)" /> Matriz de Juegos
+                <Trophy size={22} color="var(--primary)" /> Tabla de Posiciones
               </h2>
               <div className="glass-card fadeIn" style={{ padding: '2rem', overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
-                    <tr>
-                      <th style={{ padding: '15px', border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.02)' }}></th>
-                      {group?.pairs.map(p => (
-                        <th key={p.id} style={{ padding: '15px', border: '1px solid rgba(255,255,255,0.05)', fontSize: '0.8rem', minWidth: '100px' }}>
-                          {p.name}
-                        </th>
-                      ))}
+                    <tr style={{ textAlign: 'left', opacity: 0.5, fontSize: '0.8rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                      <th style={{ padding: '12px' }}>#</th>
+                      <th style={{ padding: '12px' }}>Jugador(es)</th>
+                      {isFootball ? (
+                        <>
+                          <th style={{ padding: '12px', textAlign: 'center' }}>PJ</th>
+                          <th style={{ padding: '12px', textAlign: 'center' }}>G</th>
+                          <th style={{ padding: '12px', textAlign: 'center' }}>E</th>
+                          <th style={{ padding: '12px', textAlign: 'center' }}>P</th>
+                          <th style={{ padding: '12px', textAlign: 'center' }}>GF</th>
+                          <th style={{ padding: '12px', textAlign: 'center' }}>GC</th>
+                          <th style={{ padding: '12px', textAlign: 'center' }}>DG</th>
+                          <th style={{ padding: '12px', textAlign: 'right' }}>Pts</th>
+                        </>
+                      ) : isBasketball ? (
+                        <>
+                          <th style={{ padding: '12px', textAlign: 'center' }}>PJ</th>
+                          <th style={{ padding: '12px', textAlign: 'center' }}>PG</th>
+                          <th style={{ padding: '12px', textAlign: 'center' }}>PP</th>
+                          <th style={{ padding: '12px', textAlign: 'right' }}>Pts</th>
+                        </>
+                      ) : (isRacquetball || isPickleball) ? (
+                        <>
+                          <th style={{ padding: '12px', textAlign: 'center' }}>PJ</th>
+                          <th style={{ padding: '12px', textAlign: 'center' }}>PG</th>
+                          <th style={{ padding: '12px', textAlign: 'center' }}>PP</th>
+                          <th style={{ padding: '12px', textAlign: 'center' }}>PF</th>
+                          <th style={{ padding: '12px', textAlign: 'center' }}>PC</th>
+                          <th style={{ padding: '12px', textAlign: 'right' }}>Pts</th>
+                        </>
+                      ) : (
+                        <th style={{ padding: '12px', textAlign: 'right' }}>Pts</th>
+                      )}
                     </tr>
                   </thead>
                   <tbody>
-                    {group?.pairs.map(rowPair => (
-                      <tr key={rowPair.id}>
-                        <td style={{ padding: '15px', border: '1px solid rgba(255,255,255,0.05)', fontWeight: 'bold', fontSize: '0.8rem', background: 'rgba(255,255,255,0.02)' }}>
-                          {rowPair.name}
-                        </td>
-                        {group?.pairs.map(colPair => {
-                          if (rowPair.id === colPair.id) {
-                            return <td key={colPair.id} style={{ border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.05)' }}></td>;
-                          }
-
-                          const match = group.matches.find(m =>
-                            ((m.pairAId === rowPair.id || m.pairA2Id === rowPair.id) && (m.pairBId === colPair.id || m.pairB2Id === colPair.id)) ||
-                            ((m.pairAId === colPair.id || m.pairA2Id === colPair.id) && (m.pairBId === rowPair.id || m.pairB2Id === rowPair.id))
-                          );
-
-                          if (!match) return <td key={colPair.id} style={{ border: '1px solid rgba(255,255,255,0.05)' }}></td>;
-
-                          const isWinner = match.winnerId === rowPair.id;
-                          const isDraw = match.winnerId === 'DRAW';
-                          const isFinished = !!match.winnerId;
-
-                          return (
-                            <td
-                              key={colPair.id}
-                              onClick={() => {
-                                if (isAdmin) {
-                                  if (match.winnerId === 'SITOUT') return;
-                                  const isSideA = match.pairAId === rowPair.id || match.pairA2Id === rowPair.id;
-                                  setResultModal({
-                                    show: true,
-                                    match,
-                                    rowPair,
-                                    colPair,
-                                    scoreRow: String(isSideA ? match.pointsA : match.pointsB),
-                                    scoreCol: String(isSideA ? match.pointsB : match.pointsA),
-                                    set1Row: String(isSideA ? match.set1A : match.set1B),
-                                    set1Col: String(isSideA ? match.set1B : match.set1A),
-                                    set2Row: String(isSideA ? match.set2A : match.set2B),
-                                    set2Col: String(isSideA ? match.set2B : match.set2A),
-                                    set3Row: String(isSideA ? match.set3A : match.set3B),
-                                    set3Col: String(isSideA ? match.set3B : match.set3A),
-                                    set4Row: String(isSideA ? match.set4A : match.set4B),
-                                    set4Col: String(isSideA ? match.set4B : match.set4A),
-                                    set5Row: String(isSideA ? match.set5A : match.set5B),
-                                    set5Col: String(isSideA ? match.set5B : match.set5A)
-                                  });
-                                }
-                              }}
-                              style={{
-                                border: '1px solid rgba(255,255,255,0.05)',
-                                textAlign: 'center',
-                                padding: '10px',
-                                cursor: isAdmin ? 'pointer' : 'default',
-                                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
-                              }}
-                              onMouseEnter={(e) => {
-                                if (isAdmin) {
-                                  e.currentTarget.style.background = 'rgba(0, 242, 254, 0.1)';
-                                  e.currentTarget.style.boxShadow = 'inset 0 0 10px rgba(0, 242, 254, 0.2)';
-                                  e.currentTarget.style.transform = 'scale(1.05)';
-                                  e.currentTarget.style.zIndex = '10';
-                                  e.currentTarget.style.position = 'relative';
-                                }
-                              }}
-                              onMouseLeave={(e) => {
-                                if (isAdmin) {
-                                  e.currentTarget.style.background = 'transparent';
-                                  e.currentTarget.style.boxShadow = 'none';
-                                  e.currentTarget.style.transform = 'scale(1)';
-                                  e.currentTarget.style.zIndex = '1';
-                                }
-                              }}
-                            >
-                              {isFinished && (
-                                <div style={{ display: 'flex', justifyContent: 'center' }}>
-                                  {isDraw && !isBasketball && !isRacquetball && !isPickleball ? (
-                                    <span style={{ color: '#ffcc00', fontWeight: 'bold', fontSize: '1.2rem' }}>E</span>
-                                  ) : (
-                                    <Trophy size={20} color={isWinner ? '#4ade80' : '#ff4b2b'} />
-                                  )}
-                                </div>
-                              )}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
+                    {standings.map((pair, idx) => {
+                      const statsF = isFootball ? getFootballStats(pair.id) : null;
+                      const statsB = isBasketball ? getBasketballStats(pair.id) : null;
+                      const statsR = (isRacquetball || isPickleball) ? getRacquetballStats(pair.id) : null;
+                      return (
+                        <tr key={pair.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: idx === 0 ? 'rgba(0, 242, 254, 0.05)' : 'transparent' }}>
+                          <td style={{ padding: '15px 12px', opacity: 0.5 }}>{idx + 1}</td>
+                          <td style={{ padding: '15px 12px', fontWeight: idx === 0 ? 'bold' : 'normal' }}>{pair.name}</td>
+                          {isFootball && statsF ? (
+                            <>
+                              <td style={{ padding: '15px 12px', textAlign: 'center' }}>{statsF.pj}</td>
+                              <td style={{ padding: '15px 12px', textAlign: 'center' }}>{statsF.g}</td>
+                              <td style={{ padding: '15px 12px', textAlign: 'center' }}>{statsF.e}</td>
+                              <td style={{ padding: '15px 12px', textAlign: 'center' }}>{statsF.p}</td>
+                              <td style={{ padding: '15px 12px', textAlign: 'center' }}>{statsF.gf}</td>
+                              <td style={{ padding: '15px 12px', textAlign: 'center' }}>{statsF.gc}</td>
+                              <td style={{ padding: '15px 12px', textAlign: 'center' }}>{statsF.dg}</td>
+                              <td style={{ padding: '15px 12px', textAlign: 'right', color: 'var(--primary)', fontWeight: 'bold' }}>{statsF.pts}</td>
+                            </>
+                          ) : isBasketball && statsB ? (
+                            <>
+                              <td style={{ padding: '15px 12px', textAlign: 'center' }}>{statsB.pj}</td>
+                              <td style={{ padding: '15px 12px', textAlign: 'center' }}>{statsB.g}</td>
+                              <td style={{ padding: '15px 12px', textAlign: 'center' }}>{statsB.p}</td>
+                              <td style={{ padding: '15px 12px', textAlign: 'right', color: 'var(--primary)', fontWeight: 'bold' }}>{statsB.pts}</td>
+                            </>
+                          ) : (isRacquetball || isPickleball) && statsR ? (
+                            <>
+                              <td style={{ padding: '15px 12px', textAlign: 'center' }}>{statsR.pj}</td>
+                              <td style={{ padding: '15px 12px', textAlign: 'center' }}>{statsR.g}</td>
+                              <td style={{ padding: '15px 12px', textAlign: 'center' }}>{statsR.p}</td>
+                              <td style={{ padding: '15px 12px', textAlign: 'center' }}>{statsR.pf}</td>
+                              <td style={{ padding: '15px 12px', textAlign: 'center' }}>{statsR.pc}</td>
+                              <td style={{ padding: '15px 12px', textAlign: 'right', color: 'var(--primary)', fontWeight: 'bold' }}>{statsR.pts}</td>
+                            </>
+                          ) : (
+                            <td style={{ padding: '15px 12px', textAlign: 'right', color: 'var(--primary)', fontWeight: 'bold' }}>{pair.totalScore}</td>
+                          )}
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
-                {group?.matches.length === 0 && (
-                  <div style={{ padding: '3rem', textAlign: 'center', opacity: 0.4 }}>
-                    Asigna al menos 2 jugadores para visualizar la matriz de juegos.
-                  </div>
-                )}
               </div>
             </section>
 
@@ -603,6 +576,8 @@ const GroupDetails: React.FC = () => {
                     <tr style={{ textAlign: 'left', opacity: 0.5, fontSize: '0.8rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
                       <th style={{ padding: '12px' }}>Partido</th>
                       <th style={{ padding: '12px', textAlign: 'center' }}>Marcador</th>
+                      <th style={{ padding: '12px' }}>Ganador</th>
+                      <th style={{ padding: '12px' }}>Perdedor</th>
                       <th style={{ padding: '12px', textAlign: 'right' }}>Estado</th>
                     </tr>
                   </thead>
@@ -649,13 +624,58 @@ const GroupDetails: React.FC = () => {
                             </div>
                           ) : '-- : --'}
                         </td>
+                        <td style={{ padding: '15px 12px' }}>
+                          {match.winnerId && match.winnerId !== 'SITOUT' ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#4ade80' }}>
+                              <Trophy size={16} />
+                              <span style={{ fontSize: '0.8rem', fontWeight: 'bold' }}>
+                                {match.winnerId === match.pairAId 
+                                  ? `${match.pairA.name}${match.pairA2 ? ` / ${match.pairA2.name}` : ''}`
+                                  : `${match.pairB.name}${match.pairB2 ? ` / ${match.pairB2.name}` : ''}`}
+                              </span>
+                            </div>
+                          ) : '--'}
+                        </td>
+                        <td style={{ padding: '15px 12px' }}>
+                          {match.winnerId && match.winnerId !== 'SITOUT' ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ff4757' }}>
+                              <Trophy size={16} />
+                              <span style={{ fontSize: '0.8rem' }}>
+                                {match.winnerId === match.pairAId 
+                                  ? `${match.pairB.name}${match.pairB2 ? ` / ${match.pairB2.name}` : ''}`
+                                  : `${match.pairA.name}${match.pairA2 ? ` / ${match.pairA2.name}` : ''}`}
+                              </span>
+                            </div>
+                          ) : '--'}
+                        </td>
                         <td style={{ padding: '15px 12px', textAlign: 'right' }}>
                           {match.winnerId === 'SITOUT' ? (
                             <span style={{ fontSize: '0.75rem', background: 'rgba(255, 75, 43, 0.2)', color: '#ff4b2b', padding: '4px 10px', borderRadius: '12px', fontWeight: 'bold' }}>Descanso</span>
                           ) : match.winnerId ? (
                             <span style={{ fontSize: '0.75rem', background: 'rgba(74, 222, 128, 0.1)', color: '#4ade80', padding: '4px 10px', borderRadius: '12px', fontWeight: 'bold' }}>Finalizado</span>
                           ) : (
-                            <span style={{ fontSize: '0.75rem', background: 'rgba(255, 255, 255, 0.05)', color: 'rgba(255,255,255,0.3)', padding: '4px 10px', borderRadius: '12px' }}>Pendiente</span>
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                              {isAdmin && (
+                                <button 
+                                  onClick={() => {
+                                    setResultModal({
+                                      show: true,
+                                      match,
+                                      rowPair: match.pairA,
+                                      colPair: match.pairB,
+                                      scoreRow: '0',
+                                      scoreCol: '0',
+                                      set1Row: '0',
+                                      set1Col: '0'
+                                    });
+                                  }}
+                                  style={{ padding: '4px 8px', fontSize: '0.7rem', background: 'var(--primary)', color: 'black', borderRadius: '4px', border: 'none', cursor: 'pointer' }}
+                                >
+                                  Cargar
+                                </button>
+                              )}
+                              <span style={{ fontSize: '0.75rem', background: 'rgba(255, 255, 255, 0.05)', color: 'rgba(255,255,255,0.3)', padding: '4px 10px', borderRadius: '12px' }}>Pendiente</span>
+                            </div>
                           )}
                         </td>
                       </tr>
@@ -665,104 +685,7 @@ const GroupDetails: React.FC = () => {
               </div>
             </section>
           </div>
-
-          {/* Standings Sidebar */}
-          <aside>
-            <div className="glass-card" style={{ padding: '2rem' }}>
-              <h2 style={{ marginTop: 0, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Trophy size={22} color="var(--primary)" /> Tabla de Posiciones
-              </h2>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ textAlign: 'left', opacity: 0.5, fontSize: '0.7rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                    <th style={{ padding: '10px 5px' }}>#</th>
-                    <th style={{ padding: '10px 5px' }}>Pareja</th>
-                    {isFootball ? (
-                      <>
-                        <th style={{ padding: '10px 5px', textAlign: 'center' }}>PJ</th>
-                        <th style={{ padding: '10px 5px', textAlign: 'center' }}>G</th>
-                        <th style={{ padding: '10px 5px', textAlign: 'center' }}>E</th>
-                        <th style={{ padding: '10px 5px', textAlign: 'center' }}>P</th>
-                        <th style={{ padding: '10px 5px', textAlign: 'center' }}>GF</th>
-                        <th style={{ padding: '10px 5px', textAlign: 'center' }}>GC</th>
-                        <th style={{ padding: '10px 5px', textAlign: 'center' }}>DG</th>
-                        <th style={{ padding: '10px 5px', textAlign: 'right' }}>Pts</th>
-                      </>
-                    ) : isBasketball ? (
-                      <>
-                        <th style={{ padding: '10px 5px', textAlign: 'center' }}>PJ</th>
-                        <th style={{ padding: '10px 5px', textAlign: 'center' }}>PG</th>
-                        <th style={{ padding: '10px 5px', textAlign: 'center' }}>PP</th>
-                        <th style={{ padding: '10px 5px', textAlign: 'right' }}>Pts</th>
-                      </>
-                    ) : (isRacquetball || isPickleball) ? (
-                      <>
-                        <th style={{ padding: '10px 5px', textAlign: 'center' }}>PJ</th>
-                        <th style={{ padding: '10px 5px', textAlign: 'center' }}>PG</th>
-                        <th style={{ padding: '10px 5px', textAlign: 'center' }}>PP</th>
-                        <th style={{ padding: '10px 5px', textAlign: 'center' }}>PF</th>
-                        <th style={{ padding: '10px 5px', textAlign: 'center' }}>PC</th>
-                        <th style={{ padding: '10px 5px', textAlign: 'right' }}>Pts</th>
-                      </>
-                    ) : (
-                      <th style={{ padding: '10px 5px', textAlign: 'right' }}>Pts</th>
-                    )}
-                  </tr>
-                </thead>
-                <tbody>
-                  {standings.map((pair, idx) => {
-                    const statsF = isFootball ? getFootballStats(pair.id) : null;
-                    const statsB = isBasketball ? getBasketballStats(pair.id) : null;
-                    const statsR = isRacquetball ? getRacquetballStats(pair.id) : null;
-                    return (
-                      <tr key={pair.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: idx === 0 ? 'rgba(0, 242, 254, 0.05)' : 'transparent' }}>
-                        <td style={{ padding: '12px 5px', opacity: 0.5, fontSize: '0.8rem' }}>{idx + 1}</td>
-                        <td style={{ padding: '12px 5px', fontWeight: idx === 0 ? 'bold' : 'normal', fontSize: '0.8rem', maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pair.name}</td>
-                        {isFootball && statsF ? (
-                          <>
-                            <td style={{ padding: '12px 5px', textAlign: 'center', fontSize: '0.8rem' }}>{statsF.pj}</td>
-                            <td style={{ padding: '12px 5px', textAlign: 'center', fontSize: '0.8rem' }}>{statsF.g}</td>
-                            <td style={{ padding: '12px 5px', textAlign: 'center', fontSize: '0.8rem' }}>{statsF.e}</td>
-                            <td style={{ padding: '12px 5px', textAlign: 'center', fontSize: '0.8rem' }}>{statsF.p}</td>
-                            <td style={{ padding: '12px 5px', textAlign: 'center', fontSize: '0.8rem' }}>{statsF.gf}</td>
-                            <td style={{ padding: '12px 5px', textAlign: 'center', fontSize: '0.8rem' }}>{statsF.gc}</td>
-                            <td style={{ padding: '12px 5px', textAlign: 'center', fontSize: '0.8rem' }}>{statsF.dg}</td>
-                            <td style={{ padding: '12px 5px', textAlign: 'right', color: 'var(--primary)', fontWeight: 'bold' }}>{statsF.pts}</td>
-                          </>
-                        ) : isBasketball && statsB ? (
-                          <>
-                            <td style={{ padding: '12px 5px', textAlign: 'center', fontSize: '0.8rem' }}>{statsB.pj}</td>
-                            <td style={{ padding: '12px 5px', textAlign: 'center', fontSize: '0.8rem' }}>{statsB.g}</td>
-                            <td style={{ padding: '12px 5px', textAlign: 'center', fontSize: '0.8rem' }}>{statsB.p}</td>
-                            <td style={{ padding: '12px 5px', textAlign: 'right', color: 'var(--primary)', fontWeight: 'bold' }}>{statsB.pts}</td>
-                          </>
-                        ) : (isRacquetball || isPickleball) && statsR ? (
-                          <>
-                            <td style={{ padding: '12px 5px', textAlign: 'center', fontSize: '0.8rem' }}>{statsR.pj}</td>
-                            <td style={{ padding: '12px 5px', textAlign: 'center', fontSize: '0.8rem' }}>{statsR.g}</td>
-                            <td style={{ padding: '12px 5px', textAlign: 'center', fontSize: '0.8rem' }}>{statsR.p}</td>
-                            <td style={{ padding: '12px 5px', textAlign: 'center', fontSize: '0.8rem' }}>{statsR.pf}</td>
-                            <td style={{ padding: '12px 5px', textAlign: 'center', fontSize: '0.8rem' }}>{statsR.pc}</td>
-                            <td style={{ padding: '12px 5px', textAlign: 'right', color: 'var(--primary)', fontWeight: 'bold' }}>{statsR.pts}</td>
-                          </>
-                        ) : (
-                          <td style={{ padding: '12px 5px', textAlign: 'right', color: 'var(--primary)', fontWeight: 'bold' }}>{pair.totalScore}</td>
-                        )}
-                      </tr>
-                    );
-                  })}
-                  {standings.length === 0 && (
-                    <tr>
-                      <td colSpan={3} style={{ padding: '2rem', textAlign: 'center', opacity: 0.3 }}>Sin jugadores</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </aside>
-
         </div>
-      </div>
 
       {/* Add Player Modal */}
       {showAddPlayer && (
