@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Trophy, Users, Plus, Trash2, 
-  ArrowRight, CheckCircle2, MapPin, Calendar, 
+import {
+  Trophy, Users, Plus, Trash2,
+  ArrowRight, CheckCircle2, MapPin, Calendar,
   ChevronRight, ChevronLeft, Tags
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -38,15 +38,12 @@ const TournamentCreation: React.FC = () => {
 
   const addCategory = () => {
     if (!newCatName.trim()) return;
-    
-    // For Racquetball, we deactivate automatic creation of groups/brackets as requested.
-    const isRacquet = sport === 'Racquetball';
-    
+
     setCategories([...categories, {
       name: newCatName,
-      hasGroups: !isRacquet, // Disabled for Racquetball
+      hasGroups: false, // Disabled by default for all sports
       groupCount: 1,
-      hasBrackets: !isRacquet, // Disabled for Racquetball
+      hasBrackets: false, // Disabled by default for all sports
       bracketSize: 4,
       participants: []
     }]);
@@ -123,10 +120,10 @@ const TournamentCreation: React.FC = () => {
       }
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       const [sy, sm, sd] = startDate.split('-').map(Number);
       const start = new Date(sy, sm - 1, sd);
-      
+
       const [ey, em, ed] = endDate.split('-').map(Number);
       const end = new Date(ey, em - 1, ed);
 
@@ -168,7 +165,7 @@ const TournamentCreation: React.FC = () => {
         </header>
 
         <div className="glass-card fadeIn" style={{ padding: '3.5rem', border: '1px solid rgba(255,255,255,0.05)' }}>
-          
+
           {/* STEP 1: BASIC INFO */}
           {step === 1 && (
             <div className="slideIn">
@@ -203,9 +200,9 @@ const TournamentCreation: React.FC = () => {
                 </div>
                 <div style={{ gridColumn: 'span 2' }}>
                   <label style={{ display: 'block', marginBottom: '0.8rem', opacity: 0.7 }}>Deporte</label>
-                  <select 
-                    className="input-field" 
-                    value={sport} 
+                  <select
+                    className="input-field"
+                    value={sport}
                     onChange={(e) => {
                       const selectedSport = e.target.value;
                       setSport(selectedSport);
@@ -231,7 +228,7 @@ const TournamentCreation: React.FC = () => {
                   </select>
                 </div>
               </div>
-              
+
               {/* Racquetball Rules Modal */}
               {showRacquetModal && (
                 <div style={{
@@ -242,15 +239,15 @@ const TournamentCreation: React.FC = () => {
                   <div className="glass-card fadeIn" style={{ padding: '3rem', maxWidth: '600px', border: '1px solid var(--primary)' }}>
                     <h3 style={{ marginTop: 0, marginBottom: '2rem', textAlign: 'center' }}>Selecciona el Tipo de Torneo de Racquetball</h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                      <button 
-                        className="btn-primary" 
+                      <button
+                        className="btn-primary"
                         style={{ background: description === '2 de 3 sets a 15 puntos con cambios' ? 'var(--primary)' : 'rgba(255,255,255,0.05)', color: description === '2 de 3 sets a 15 puntos con cambios' ? '#000' : 'white' }}
                         onClick={() => setDescription('2 de 3 sets a 15 puntos con cambios')}
                       >
                         2 de 3 sets a 15 puntos con cambios
                       </button>
-                      <button 
-                        className="btn-primary" 
+                      <button
+                        className="btn-primary"
                         style={{ background: description === '3 de 5 sets a 11 puntos, punto directo, con diferencia de dos puntos' ? 'var(--primary)' : 'rgba(255,255,255,0.05)', color: description === '3 de 5 sets a 11 puntos, punto directo, con diferencia de dos puntos' ? '#000' : 'white' }}
                         onClick={() => setDescription('3 de 5 sets a 11 puntos, punto directo, con diferencia de dos puntos')}
                       >
@@ -258,8 +255,8 @@ const TournamentCreation: React.FC = () => {
                       </button>
                     </div>
                     <div style={{ display: 'flex', gap: '1rem', marginTop: '3rem' }}>
-                      <button 
-                        className="btn-primary" 
+                      <button
+                        className="btn-primary"
                         onClick={() => {
                           setShowRacquetModal(false);
                           setSport('Tenis');
@@ -269,8 +266,8 @@ const TournamentCreation: React.FC = () => {
                       >
                         Cancelar
                       </button>
-                      <button 
-                        className="btn-primary" 
+                      <button
+                        className="btn-primary"
                         disabled={!description}
                         onClick={() => setShowRacquetModal(false)}
                         style={{ flex: 2, background: 'var(--primary)', color: '#000' }}
@@ -307,25 +304,25 @@ const TournamentCreation: React.FC = () => {
               <h2 style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1rem' }}>
                 <Tags color="var(--primary)" size={28} /> Categorías
               </h2>
-              <p style={{ opacity: 0.6, marginBottom: '2.5rem' }}>Define los grupos de competencia (ej: Rama Varonil, Sub-20, etc.)</p>
-              
+              <p style={{ opacity: 0.6, marginBottom: '2.5rem' }}>Define las categorias de competencia (ej: Rama Varonil, Sub-20, etc.)</p>
+
               <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
-                <input 
-                  type="text" 
-                  className="input-field" 
-                  placeholder="Nombre de la categoría..." 
-                  value={newCatName} 
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="Nombre de la categoría..."
+                  value={newCatName}
                   onChange={(e) => setNewCatName(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && addCategory()}
                 />
                 <button onClick={addCategory} className="btn-primary" style={{ padding: '0 2rem' }}>
-                   <Plus size={24} />
+                  <Plus size={24} />
                 </button>
               </div>
 
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', minHeight: '100px' }}>
                 {categories.map((cat, idx) => (
-                  <div key={idx} className="glass-card fadeIn" style={{ 
+                  <div key={idx} className="glass-card fadeIn" style={{
                     padding: '0.8rem 1.5rem', display: 'flex', alignItems: 'center', gap: '15px',
                     background: 'rgba(0, 242, 254, 0.05)', border: '1px solid var(--primary)33'
                   }}>
@@ -355,7 +352,7 @@ const TournamentCreation: React.FC = () => {
               <h2 style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '2.5rem' }}>
                 <Users color="var(--primary)" size={28} /> Registro de Participantes
               </h2>
-              
+
               <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
                 {categories.map((cat, catIdx) => (
                   <div key={catIdx}>
@@ -368,11 +365,11 @@ const TournamentCreation: React.FC = () => {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                       {cat.participants.map((p, pIdx) => (
                         <div key={pIdx} style={{ display: 'flex', gap: '8px' }}>
-                          <input 
-                            type="text" 
-                            className="input-field" 
-                            placeholder={`Participante ${pIdx + 1}`} 
-                            value={p} 
+                          <input
+                            type="text"
+                            className="input-field"
+                            placeholder={`Participante ${pIdx + 1}`}
+                            value={p}
                             onChange={(e) => handleParticipantChange(catIdx, pIdx, e.target.value)}
                           />
                           {cat.participants.length > 2 && (
@@ -389,9 +386,9 @@ const TournamentCreation: React.FC = () => {
 
               <div style={{ display: 'flex', gap: '1.5rem', marginTop: '5rem' }}>
                 <button className="btn-primary" onClick={prevStep} style={{ background: 'rgba(255,255,255,0.05)', flex: 1 }}>Atrás</button>
-                <button 
-                  className="btn-primary" 
-                  onClick={handleSubmit} 
+                <button
+                  className="btn-primary"
+                  onClick={handleSubmit}
                   disabled={loading}
                   style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}
                 >
@@ -412,8 +409,8 @@ const StepIndicator = ({ current, target, label }: { current: number, target: nu
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', opacity: isActive || isCompleted ? 1 : 0.35 }}>
-      <div style={{ 
-        width: '32px', height: '32px', borderRadius: '50%', 
+      <div style={{
+        width: '32px', height: '32px', borderRadius: '50%',
         background: isCompleted ? 'var(--primary)' : (isActive ? 'var(--primary)' : 'transparent'),
         border: '2px solid var(--primary)',
         display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem',
