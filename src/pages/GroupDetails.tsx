@@ -393,7 +393,7 @@ const GroupDetails: React.FC = () => {
       }
     });
 
-    stats.pts = stats.pf - stats.pc;
+    stats.pts = isPickleball ? stats.pf : stats.pf - stats.pc;
     return stats;
   };
 
@@ -511,7 +511,14 @@ const GroupDetails: React.FC = () => {
                           <th style={{ padding: '12px', textAlign: 'center' }}>PP</th>
                           <th style={{ padding: '12px', textAlign: 'right' }}>Pts</th>
                         </>
-                      ) : (isRacquetball || isPickleball) ? (
+                      ) : isPickleball ? (
+                        <>
+                          <th style={{ padding: '12px', textAlign: 'center' }}>PJ</th>
+                          <th style={{ padding: '12px', textAlign: 'center' }}>PG</th>
+                          <th style={{ padding: '12px', textAlign: 'center' }}>PP</th>
+                          <th style={{ padding: '12px', textAlign: 'right' }}>Pts</th>
+                        </>
+                      ) : isRacquetball ? (
                         <>
                           <th style={{ padding: '12px', textAlign: 'center' }}>PJ</th>
                           <th style={{ padding: '12px', textAlign: 'center' }}>PG</th>
@@ -552,7 +559,14 @@ const GroupDetails: React.FC = () => {
                               <td style={{ padding: '15px 12px', textAlign: 'center' }}>{statsB.p}</td>
                               <td style={{ padding: '15px 12px', textAlign: 'right', color: 'var(--primary)', fontWeight: 'bold' }}>{statsB.pts}</td>
                             </>
-                          ) : (isRacquetball || isPickleball) && statsR ? (
+                          ) : isPickleball && statsR ? (
+                            <>
+                              <td style={{ padding: '15px 12px', textAlign: 'center' }}>{statsR.pj}</td>
+                              <td style={{ padding: '15px 12px', textAlign: 'center' }}>{statsR.g}</td>
+                              <td style={{ padding: '15px 12px', textAlign: 'center' }}>{statsR.p}</td>
+                              <td style={{ padding: '15px 12px', textAlign: 'right', color: 'var(--primary)', fontWeight: 'bold' }}>{statsR.pts}</td>
+                            </>
+                          ) : isRacquetball && statsR ? (
                             <>
                               <td style={{ padding: '15px 12px', textAlign: 'center' }}>{statsR.pj}</td>
                               <td style={{ padding: '15px 12px', textAlign: 'center' }}>{statsR.g}</td>
