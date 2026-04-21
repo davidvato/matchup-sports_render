@@ -73,6 +73,12 @@ const BracketDetails: React.FC = () => {
     set2B: string;
     set3A: string;
     set3B: string;
+    set4A: string;
+    set4B: string;
+    set5A: string;
+    set5B: string;
+    scoreA: string;
+    scoreB: string;
   }>({
     show: false,
     match: null,
@@ -85,7 +91,9 @@ const BracketDetails: React.FC = () => {
     set4A: '0',
     set4B: '0',
     set5A: '0',
-    set5B: '0'
+    set5B: '0',
+    scoreA: '0',
+    scoreB: '0'
   });
 
   const [confirmModal, setConfirmModal] = useState<{
@@ -435,7 +443,7 @@ const BracketDetails: React.FC = () => {
                           })()
                         ) : match.pointsA}
                         onFocus={() => {
-                          if (isAdmin && (isRacquetball2Of3 || isRacquetball3Of5 || isPickleballLogic)) {
+                          if (isAdmin) {
                             setResultModal({
                               show: true,
                               match,
@@ -448,12 +456,14 @@ const BracketDetails: React.FC = () => {
                               set4A: String(match.set4A),
                               set4B: String(match.set4B),
                               set5A: String(match.set5A),
-                              set5B: String(match.set5B)
+                              set5B: String(match.set5B),
+                              scoreA: String(match.pointsA),
+                              scoreB: String(match.pointsB)
                             });
                           }
                         }}
                         onChange={() => { }} // Controlled by onFocus/Modal for 3/5 sets
-                        onBlur={(e) => !isRacquetball2Of3 && !isRacquetball3Of5 && !isPickleballLogic && handleUpdateResult(match, parseInt(e.target.value), match.pointsB)}
+                        onBlur={(e) => false && handleUpdateResult(match, parseInt(e.target.value), match.pointsB)}
                         onClick={(e) => e.stopPropagation()}
                         disabled={!isAdmin || !match.pairA || !match.pairB}
                       />
@@ -499,7 +509,7 @@ const BracketDetails: React.FC = () => {
                           })()
                         ) : match.pointsB}
                         onFocus={() => {
-                          if (isAdmin && (isRacquetball2Of3 || isRacquetball3Of5 || isPickleballLogic)) {
+                          if (isAdmin) {
                             setResultModal({
                               show: true,
                               match,
@@ -512,12 +522,14 @@ const BracketDetails: React.FC = () => {
                               set4A: String(match.set4A),
                               set4B: String(match.set4B),
                               set5A: String(match.set5A),
-                              set5B: String(match.set5B)
+                              set5B: String(match.set5B),
+                              scoreA: String(match.pointsA),
+                              scoreB: String(match.pointsB)
                             });
                           }
                         }}
                         onChange={() => { }}
-                        onBlur={(e) => !isRacquetball2Of3 && !isRacquetball3Of5 && !isPickleballLogic && handleUpdateResult(match, match.pointsA, parseInt(e.target.value))}
+                        onBlur={(e) => false && handleUpdateResult(match, match.pointsA, parseInt(e.target.value))}
                         onClick={(e) => e.stopPropagation()}
                         disabled={!isAdmin || !match.pairA || !match.pairB}
                       />
@@ -660,26 +672,49 @@ const BracketDetails: React.FC = () => {
             <div style={{ marginBottom: '3rem' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 1.5fr', gap: '1rem', alignItems: 'center', marginBottom: '1rem', opacity: 0.5, fontSize: '0.8rem' }}>
                 <div style={{ textAlign: 'right' }}>{resultModal.match.pairA?.name || 'A'}</div>
-                <div style={{ textAlign: 'center' }}>Set A</div>
-                <div style={{ textAlign: 'center' }}>Set B</div>
+                <div style={{ textAlign: 'center' }}>{(isRacquetball2Of3 || isRacquetball3Of5 || isPickleballLogic) ? 'Set A' : 'Puntos'}</div>
+                <div style={{ textAlign: 'center' }}>{(isRacquetball2Of3 || isRacquetball3Of5 || isPickleballLogic) ? 'Set B' : 'Puntos'}</div>
                 <div style={{ textAlign: 'left' }}>{resultModal.match.pairB?.name || 'B'}</div>
               </div>
 
-              {!isPickleballLogic && (
+              {(!isRacquetball2Of3 && !isRacquetball3Of5 && !isPickleballLogic) ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2rem', marginBottom: '1.5rem' }}>
+                  <input
+                    type="number"
+                    className="input-field"
+                    style={{ width: '80px', fontSize: '2rem', textAlign: 'center', padding: '0.5rem' }}
+                    value={resultModal.scoreA}
+                    onChange={(e) => setResultModal({ ...resultModal, scoreA: e.target.value })}
+                    autoFocus
+                  />
+                  <div style={{ fontSize: '2rem', opacity: 0.3 }}>-</div>
+                  <input
+                    type="number"
+                    className="input-field"
+                    style={{ width: '80px', fontSize: '2rem', textAlign: 'center', padding: '0.5rem' }}
+                    value={resultModal.scoreB}
+                    onChange={(e) => setResultModal({ ...resultModal, scoreB: e.target.value })}
+                  />
+                </div>
+              ) : (
                 <>
-                  <SetRow label="Set 1" valA={resultModal.set1A} valB={resultModal.set1B} onChangeA={(v) => setResultModal({ ...resultModal, set1A: v })} onChangeB={(v) => setResultModal({ ...resultModal, set1B: v })} />
-                  <SetRow label="Set 2" valA={resultModal.set2A} valB={resultModal.set2B} onChangeA={(v) => setResultModal({ ...resultModal, set2A: v })} onChangeB={(v) => setResultModal({ ...resultModal, set2B: v })} />
-                  <SetRow label="Set 3" valA={resultModal.set3A} valB={resultModal.set3B} onChangeA={(v) => setResultModal({ ...resultModal, set3A: v })} onChangeB={(v) => setResultModal({ ...resultModal, set3B: v })} />
-                </>
-              )}
-              {isPickleballLogic && (
-                <SetRow label="Único Set" valA={resultModal.set1A} valB={resultModal.set1B} onChangeA={(v) => setResultModal({ ...resultModal, set1A: v })} onChangeB={(v) => setResultModal({ ...resultModal, set1B: v })} />
-              )}
-              
-              {isRacquetball3Of5 && (
-                <>
-                  <SetRow label="Set 4" valA={resultModal.set4A} valB={resultModal.set4B} onChangeA={(v) => setResultModal({ ...resultModal, set4A: v })} onChangeB={(v) => setResultModal({ ...resultModal, set4B: v })} />
-                  <SetRow label="Set 5" valA={resultModal.set5A} valB={resultModal.set5B} onChangeA={(v) => setResultModal({ ...resultModal, set5A: v })} onChangeB={(v) => setResultModal({ ...resultModal, set5B: v })} />
+                  {!isPickleballLogic && (
+                    <>
+                      <SetRow label="Set 1" valA={resultModal.set1A} valB={resultModal.set1B} onChangeA={(v) => setResultModal({ ...resultModal, set1A: v })} onChangeB={(v) => setResultModal({ ...resultModal, set1B: v })} />
+                      <SetRow label="Set 2" valA={resultModal.set2A} valB={resultModal.set2B} onChangeA={(v) => setResultModal({ ...resultModal, set2A: v })} onChangeB={(v) => setResultModal({ ...resultModal, set2B: v })} />
+                      <SetRow label="Set 3" valA={resultModal.set3A} valB={resultModal.set3B} onChangeA={(v) => setResultModal({ ...resultModal, set3A: v })} onChangeB={(v) => setResultModal({ ...resultModal, set3B: v })} />
+                    </>
+                  )}
+                  {isPickleballLogic && (
+                    <SetRow label="Único Set" valA={resultModal.set1A} valB={resultModal.set1B} onChangeA={(v) => setResultModal({ ...resultModal, set1A: v })} onChangeB={(v) => setResultModal({ ...resultModal, set1B: v })} />
+                  )}
+                  
+                  {isRacquetball3Of5 && (
+                    <>
+                      <SetRow label="Set 4" valA={resultModal.set4A} valB={resultModal.set4B} onChangeA={(v) => setResultModal({ ...resultModal, set4A: v })} onChangeB={(v) => setResultModal({ ...resultModal, set4B: v })} />
+                      <SetRow label="Set 5" valA={resultModal.set5A} valB={resultModal.set5B} onChangeA={(v) => setResultModal({ ...resultModal, set5A: v })} onChangeB={(v) => setResultModal({ ...resultModal, set5B: v })} />
+                    </>
+                  )}
                 </>
               )}
 
@@ -831,8 +866,12 @@ const BracketDetails: React.FC = () => {
                     }
                   }
 
-                  const pA = sets.reduce((acc, s) => acc + s.a, 0);
-                  const pB = sets.reduce((acc, s) => acc + s.b, 0);
+                  const pA = (isRacquetball2Of3 || isRacquetball3Of5 || isPickleballLogic) 
+                    ? sets.reduce((acc, s) => acc + s.a, 0)
+                    : parseInt(resultModal.scoreA) || 0;
+                  const pB = (isRacquetball2Of3 || isRacquetball3Of5 || isPickleballLogic)
+                    ? sets.reduce((acc, s) => acc + s.b, 0)
+                    : parseInt(resultModal.scoreB) || 0;
 
                   await handleUpdateResult(resultModal.match!, pA, pB, s1A, s1B, s2A, s2B, s3A, s3B, s4A, s4B, s5A, s5B);
                   setResultModal({ ...resultModal, show: false });
