@@ -790,11 +790,12 @@ const BracketDetails: React.FC = () => {
                     }
                   }
 
+                  const isSetSport = isRacquetball2Of3 || isRacquetball3Of5 || isPickleballLogic;
                   const setsWinA = sets.filter(s => s.a > s.b).length;
                   const setsWinB = sets.filter(s => s.b > s.a).length;
                   const requiredSets = isPickleballLogic ? 1 : (isRacquetball3Of5 ? 3 : 2);
 
-                  if (setsWinA < requiredSets && setsWinB < requiredSets) {
+                  if (isSetSport && setsWinA < requiredSets && setsWinB < requiredSets) {
                     setConfirmModal({
                       show: true,
                       title: `Faltan sets ganados`,
