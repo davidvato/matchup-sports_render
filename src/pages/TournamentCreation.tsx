@@ -62,23 +62,7 @@ const TournamentCreation: React.FC = () => {
     setCategories(newCats);
   };
 
-  const handleParticipantChange = (catIdx: number, pIdx: number, value: string) => {
-    const newCats = [...categories];
-    newCats[catIdx].participants[pIdx] = value;
-    setCategories(newCats);
-  };
 
-  const addParticipant = (catIdx: number) => {
-    const newCats = [...categories];
-    newCats[catIdx].participants.push('');
-    setCategories(newCats);
-  };
-
-  const removeParticipant = (catIdx: number, pIdx: number) => {
-    const newCats = [...categories];
-    newCats[catIdx].participants.splice(pIdx, 1);
-    setCategories(newCats);
-  };
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -96,7 +80,7 @@ const TournamentCreation: React.FC = () => {
           creatorId: user?.id,
           categories: categories.map(cat => ({
             ...cat,
-            participants: cat.participants.filter(p => p.trim() !== '')
+            participants: [] // No participants added during creation anymore
           }))
         })
       });
@@ -160,7 +144,6 @@ const TournamentCreation: React.FC = () => {
           <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
             <StepIndicator current={step} target={1} label="Información" />
             <StepIndicator current={step} target={2} label="Categorías" />
-            <StepIndicator current={step} target={3} label="Participantes" />
           </div>
         </header>
 
@@ -341,55 +324,10 @@ const TournamentCreation: React.FC = () => {
 
               <div style={{ display: 'flex', gap: '1.5rem', marginTop: '4rem' }}>
                 <button className="btn-primary" onClick={prevStep} style={{ background: 'rgba(255,255,255,0.05)', flex: 1 }}>Atrás</button>
-                <button className="btn-primary" onClick={nextStep} disabled={categories.length === 0} style={{ flex: 2 }}>Registrar Participantes</button>
-              </div>
-            </div>
-          )}
-
-          {/* STEP 3: PARTICIPANTS PER CATEGORY */}
-          {step === 3 && (
-            <div className="slideIn">
-              <h2 style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '2.5rem' }}>
-                <Users color="var(--primary)" size={28} /> Registro de Participantes
-              </h2>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
-                {categories.map((cat, catIdx) => (
-                  <div key={catIdx}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                      <h3 style={{ margin: 0 }}>{cat.name}</h3>
-                      <button onClick={() => addParticipant(catIdx)} className="btn-primary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                        <Plus size={14} /> Añadir
-                      </button>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                      {cat.participants.map((p, pIdx) => (
-                        <div key={pIdx} style={{ display: 'flex', gap: '8px' }}>
-                          <input
-                            type="text"
-                            className="input-field"
-                            placeholder={`Participante ${pIdx + 1}`}
-                            value={p}
-                            onChange={(e) => handleParticipantChange(catIdx, pIdx, e.target.value)}
-                          />
-                          {cat.participants.length > 2 && (
-                            <button onClick={() => removeParticipant(catIdx, pIdx)} style={{ background: 'none', border: 'none', color: 'rgba(255,75,43,0.5)', cursor: 'pointer' }}>
-                              <Trash2 size={18} />
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div style={{ display: 'flex', gap: '1.5rem', marginTop: '5rem' }}>
-                <button className="btn-primary" onClick={prevStep} style={{ background: 'rgba(255,255,255,0.05)', flex: 1 }}>Atrás</button>
-                <button
-                  className="btn-primary"
-                  onClick={handleSubmit}
-                  disabled={loading}
+                <button 
+                  className="btn-primary" 
+                  onClick={handleSubmit} 
+                  disabled={categories.length === 0 || loading} 
                   style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}
                 >
                   {loading ? 'Procesando...' : 'Crear Torneo'} <CheckCircle2 size={20} />
@@ -397,6 +335,7 @@ const TournamentCreation: React.FC = () => {
               </div>
             </div>
           )}
+
         </div>
       </div>
     </div>
@@ -420,7 +359,7 @@ const StepIndicator = ({ current, target, label }: { current: number, target: nu
         {isCompleted ? <CheckCircle2 size={18} /> : target}
       </div>
       <span style={{ fontSize: '1rem', fontWeight: isActive ? 'bold' : 'normal', display: 'inline-block' }}>{label}</span>
-      {target < 3 && <ChevronRight size={16} style={{ marginLeft: '5px', opacity: 0.3 }} />}
+      {target < 2 && <ChevronRight size={16} style={{ marginLeft: '5px', opacity: 0.3 }} />}
     </div>
   );
 };
