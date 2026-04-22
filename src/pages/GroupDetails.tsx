@@ -132,13 +132,13 @@ const GroupDetails: React.FC = () => {
 
   const fetchGroup = async () => {
     try {
-      const res = await fetch(`http://localhost:3001/api/groups/${id}`);
+      const res = await fetch(`/api/groups/${id}`);
       const data = await res.json();
       setGroup(data);
 
       // Fetch category pairs to see who is available
       if (data.categoryId) {
-        const catRes = await fetch(`http://localhost:3001/api/categories/${data.categoryId}`);
+        const catRes = await fetch(`/api/categories/${data.categoryId}`);
         const catData = await catRes.json();
         // Get all category pairs (we will show them all with warnings instead of filtering)
         setAvailablePairs(catData.pairs);
@@ -157,7 +157,7 @@ const GroupDetails: React.FC = () => {
       message: '¿Estás seguro de eliminar este grupo? Esta acción borrará todos sus partidos asociados.',
       onConfirm: async () => {
         try {
-          const res = await fetch(`http://localhost:3001/api/groups/${id}`, { method: 'DELETE' });
+          const res = await fetch(`/api/groups/${id}`, { method: 'DELETE' });
           if (res.ok) navigate(`/tournament/${group?.category.tournamentId}`);
         } catch (err) {
           console.error(err);
@@ -169,7 +169,7 @@ const GroupDetails: React.FC = () => {
   const handleBatchAdd = async () => {
     if (selectedPairs.length === 0) return;
     try {
-      const res = await fetch(`http://localhost:3001/api/groups/${id}/pairs/batch`, {
+      const res = await fetch(`/api/groups/${id}/pairs/batch`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pairIds: selectedPairs })
@@ -222,7 +222,7 @@ const GroupDetails: React.FC = () => {
   const handleRegisterPair = async () => {
     if (!registerModal.name.trim() || !group) return;
     try {
-      const res = await fetch(`http://localhost:3001/api/categories/${group.categoryId}/pairs`, {
+      const res = await fetch(`/api/categories/${group.categoryId}/pairs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: registerModal.name })
@@ -257,7 +257,7 @@ const GroupDetails: React.FC = () => {
 
     const winnerId = pointsA > pointsB ? pairAId : (pointsB > pointsA ? pairBId : 'DRAW');
     try {
-      const res = await fetch(`http://localhost:3001/api/matches/${matchId}/result`, {
+      const res = await fetch(`/api/matches/${matchId}/result`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -280,7 +280,7 @@ const GroupDetails: React.FC = () => {
       message: '¿Estás seguro de reiniciar todos los resultados de este grupo? Esta acción pondrá todos los marcadores en 0.',
       onConfirm: async () => {
         try {
-          const res = await fetch(`http://localhost:3001/api/groups/${id}/reset`, { method: 'POST' });
+          const res = await fetch(`/api/groups/${id}/reset`, { method: 'POST' });
           if (res.ok) fetchGroup();
         } catch (err) {
           console.error(err);

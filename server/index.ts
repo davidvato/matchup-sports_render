@@ -2,6 +2,11 @@ import express from 'express';
 import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -11,6 +16,9 @@ const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
+
+// Serve static files from the React app
+app.use(express.static(path.join(__dirname, '../dist')));
 
 // Auth: Login
 app.post('/api/login', async (req, res) => {
@@ -954,6 +962,11 @@ app.delete('/api/tournaments/:id', async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false });
   }
+});
+
+// All other GET requests not handled before will return the React app
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
 app.listen(PORT, () => {

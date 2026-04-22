@@ -16,7 +16,7 @@ const Home: React.FC = () => {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
 
   useEffect(() => {
-    fetch('http://localhost:3001/api/tournaments')
+    fetch('/api/tournaments')
       .then(res => res.json())
       .then(data => setTournaments(data.slice(0, 3))) // Show only last 3
       .catch(err => console.error(err));

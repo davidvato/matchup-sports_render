@@ -19,7 +19,7 @@ const SportPage: React.FC = () => {
 
   useEffect(() => {
     if (sport) {
-      fetch(`http://localhost:3001/api/tournaments?sport=${sport.name}`)
+      fetch(`/api/tournaments?sport=${sport.name}`)
         .then(res => res.json())
         .then(data => setTournaments(data))
         .catch(err => console.error(err));

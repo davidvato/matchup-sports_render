@@ -114,12 +114,12 @@ const BracketDetails: React.FC = () => {
 
   const fetchBracket = async () => {
     try {
-      const res = await fetch(`http://localhost:3001/api/brackets/${id}`);
+      const res = await fetch(`/api/brackets/${id}`);
       const data = await res.json();
       setBracket(data);
 
       if (data.categoryId) {
-        const catRes = await fetch(`http://localhost:3001/api/categories/${data.categoryId}`);
+        const catRes = await fetch(`/api/categories/${data.categoryId}`);
         const catData = await catRes.json();
         setCategoryPairs(catData.pairs);
       }
@@ -133,7 +133,7 @@ const BracketDetails: React.FC = () => {
   const handleRegisterPair = async () => {
     if (!registerModal.name.trim() || !bracket) return;
     try {
-      const res = await fetch(`http://localhost:3001/api/categories/${bracket.categoryId}/pairs`, {
+      const res = await fetch(`/api/categories/${bracket.categoryId}/pairs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: registerModal.name })
@@ -180,7 +180,7 @@ const BracketDetails: React.FC = () => {
     const nextMatchPos = match.matchIndex % 2 === 0 ? 'pairAId' : 'pairBId';
 
     try {
-      const res = await fetch(`http://localhost:3001/api/bracket-matches/${match.id}/result`, {
+      const res = await fetch(`/api/bracket-matches/${match.id}/result`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -205,7 +205,7 @@ const BracketDetails: React.FC = () => {
   const handleSeedBracket = async () => {
     if (!bracket) return;
     try {
-      const res = await fetch(`http://localhost:3001/api/brackets/${bracket.id}/seed`, {
+      const res = await fetch(`/api/brackets/${bracket.id}/seed`, {
         method: 'POST'
       });
       if (res.ok) fetchBracket();
@@ -249,7 +249,7 @@ const BracketDetails: React.FC = () => {
 
   const executeAssign = async (pairId: string | null) => {
     try {
-      const res = await fetch(`http://localhost:3001/api/bracket-matches/${selectModal.matchId}`, {
+      const res = await fetch(`/api/bracket-matches/${selectModal.matchId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -272,7 +272,7 @@ const BracketDetails: React.FC = () => {
       message: '¿Estás seguro de reiniciar el bracket? Se borrarán todos los resultados y el avance, pero se mantendrá el sembrado inicial.',
       onConfirm: async () => {
         try {
-          const res = await fetch(`http://localhost:3001/api/brackets/${id}/reset`, { method: 'POST' });
+          const res = await fetch(`/api/brackets/${id}/reset`, { method: 'POST' });
           if (res.ok) {
             await fetchBracket();
           }
@@ -290,7 +290,7 @@ const BracketDetails: React.FC = () => {
       message: '¿Estás seguro de eliminar este bracket? Se perderán todos los partidos y resultados.',
       onConfirm: async () => {
         try {
-          const res = await fetch(`http://localhost:3001/api/brackets/${id}`, { method: 'DELETE' });
+          const res = await fetch(`/api/brackets/${id}`, { method: 'DELETE' });
           if (res.ok) {
             navigate(`/tournament/${bracket?.category.tournamentId}`);
           }
