@@ -972,7 +972,7 @@ app.delete('/api/tournaments/:id', async (req, res) => {
 });
 
 // All other GET requests not handled before will return the React app
-app.get('*', (req, res) => {
+app.get('/{*splat}', (req, res) => {
   res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
