@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
-  ChevronLeft, Users, Trophy,
+  ChevronLeft, Users, Trophy, Activity,
   ArrowRight, Settings, MapPin, Calendar,
   Layers, Trash2, AlertTriangle, Plus, RotateCcw
 } from 'lucide-react';
@@ -54,7 +54,6 @@ const TournamentDetails: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
-  const [editForm, setEditForm] = useState({ name: '', location: '', startDate: '', endDate: '' });
 
   // Custom Confirmation Modal State
   const [confirmModal, setConfirmModal] = useState<{
@@ -277,16 +276,7 @@ const TournamentDetails: React.FC = () => {
     });
   };
 
-  useEffect(() => {
-    if (tournament) {
-      setEditForm({
-        name: tournament.name,
-        location: tournament.location || '',
-        startDate: tournament.startDate ? tournament.startDate.split('T')[0] : '',
-        endDate: tournament.endDate ? tournament.endDate.split('T')[0] : ''
-      });
-    }
-  }, [tournament]);
+
 
   useEffect(() => {
     fetchTournament();
