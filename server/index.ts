@@ -335,14 +335,21 @@ app.post('/api/categories/:id/brackets', async (req, res) => {
   }
 });
 
-// Groups: Create (Legacy/Alternative)
+// Groups: Create (Legacy/Alternative - finds first category of tournament)
 app.post('/api/tournaments/:id/groups', async (req, res) => {
   const { name } = req.body;
   try {
+    const tournament = await prisma.tournament.findUnique({
+      where: { id: req.params.id },
+      include: { categories: { take: 1 } }
+    });
+    if (!tournament || tournament.categories.length === 0) {
+      return res.status(404).json({ error: 'No category found' });
+    }
     const group = await prisma.group.create({
       data: {
         name,
-        tournamentId: req.params.id
+        categoryId: tournament.categories[0].id
       }
     });
     res.json(group);
