@@ -7,7 +7,7 @@
     "dev:server": "nodemon --watch server --exec ts-node server/index.ts",
     "dev:client": "vite",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "build": "npx prisma generate && tsc -b && vite build",
+    "build": "npx prisma generate && npx prisma db push && tsc -b && vite build",
     "start": "ts-node server/index.ts",
     "lint": "eslint .",
     "preview": "vite preview"
