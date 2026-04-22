@@ -7,8 +7,9 @@
     "dev:server": "nodemon --watch server --exec ts-node server/index.ts",
     "dev:client": "vite",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "build": "npx prisma generate && npx prisma db push && tsc -b && vite build",
-    "start": "ts-node server/index.ts",
+    "build": "tsc -b && vite build",
+    "postinstall": "npx prisma generate",
+    "start": "npx prisma db push && ts-node server/index.ts",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -19,7 +20,10 @@
     "lucide-react": "^1.8.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "react-router-dom": "^7.14.0"
+    "react-router-dom": "^7.14.0",
+    "prisma": "^6.19.3",
+    "ts-node": "^10.9.2",
+    "typescript": "~6.0.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
@@ -35,10 +39,6 @@
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
     "nodemon": "^3.1.14",
-    "prisma": "^6.19.3",
-    "ts-node": "^10.9.2",
-    "typescript": "~6.0.2",
-    "typescript-eslint": "^8.58.0",
     "vite": "^8.0.4"
   }
 }
