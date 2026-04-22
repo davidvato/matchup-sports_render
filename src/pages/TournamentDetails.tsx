@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
-  ChevronLeft, Users, Trophy, Activity,
+  ChevronLeft, Users, Trophy,
   ArrowRight, Settings, MapPin, Calendar,
   Layers, Trash2, AlertTriangle, Plus, RotateCcw
 } from 'lucide-react';
@@ -54,7 +54,6 @@ const TournamentDetails: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ name: '', location: '', startDate: '', endDate: '' });
 
   // Custom Confirmation Modal State
@@ -105,21 +104,7 @@ const TournamentDetails: React.FC = () => {
     });
   };
 
-  const handleUpdateTournament = async () => {
-    try {
-      const res = await fetch(`/api/tournaments/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editForm)
-      });
-      if (res.ok) {
-        setIsEditing(false);
-        fetchTournament();
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
+
 
   const handleAddGroup = async (categoryId: string) => {
     const defaultName = `Grupo ${String.fromCharCode(65 + (tournament?.categories.find(c => c.id === categoryId)?.groups.length || 0))}`;
@@ -406,7 +391,7 @@ const TournamentDetails: React.FC = () => {
                         border: '1px solid rgba(255,255,255,0.1)'
                       }}>
                         <button
-                          onClick={() => { setIsEditing(true); setShowSettings(false); }}
+                          onClick={() => { /* setIsEditing(true); */ setShowSettings(false); }}
                           style={{
                             width: '100%', padding: '10px', background: 'none', border: 'none',
                             color: 'white', cursor: 'pointer', textAlign: 'left', borderRadius: '8px',
@@ -415,7 +400,7 @@ const TournamentDetails: React.FC = () => {
                           onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'}
                           onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                         >
-                          Editar Información
+                          Editar Información (Deshabilitado)
                         </button>
                         <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '5px 0' }} />
                         <button
@@ -530,7 +515,7 @@ const TournamentDetails: React.FC = () => {
                       border: '1px solid rgba(255,255,255,0.1)'
                     }}>
                       <button
-                        onClick={() => { setIsEditing(true); setShowSettings(false); }}
+                        onClick={() => { /* setIsEditing(true); */ setShowSettings(false); }}
                         style={{
                           width: '100%', padding: '10px', background: 'none', border: 'none',
                           color: 'white', cursor: 'pointer', textAlign: 'left', borderRadius: '8px',
@@ -539,7 +524,7 @@ const TournamentDetails: React.FC = () => {
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                       >
-                        Editar Información
+                        Editar Información (Deshabilitado)
                       </button>
                       <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '5px 0' }} />
                       <button

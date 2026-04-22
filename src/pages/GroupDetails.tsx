@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ChevronLeft, Users, Trophy, Activity, CheckCircle2, RotateCcw, Plus, X, AlertTriangle, Trash2 } from 'lucide-react';
+import { ChevronLeft, Trophy, CheckCircle2, RotateCcw, Plus, AlertTriangle, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface Pair {
@@ -46,6 +46,12 @@ interface Match {
   id: string;
   pairA: Pair;
   pairB: Pair;
+  pairA2?: Pair | null;
+  pairB2?: Pair | null;
+  pairAId: string;
+  pairBId: string;
+  pairA2Id?: string | null;
+  pairB2Id?: string | null;
   winnerId: string | null;
   pointsA: number;
   pointsB: number;
@@ -96,6 +102,10 @@ const GroupDetails: React.FC = () => {
     set2Col: string;
     set3Row: string;
     set3Col: string;
+    set4Row: string;
+    set4Col: string;
+    set5Row: string;
+    set5Col: string;
   }>({
     show: false,
     match: null,

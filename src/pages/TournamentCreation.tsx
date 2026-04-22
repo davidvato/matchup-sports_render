@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Trophy, Users, Plus, Trash2,
+  Trophy, Plus, Trash2,
   ArrowRight, CheckCircle2, MapPin, Calendar,
-  ChevronRight, ChevronLeft, Tags
+  ChevronRight, Tags
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -50,11 +50,7 @@ const TournamentCreation: React.FC = () => {
     setNewCatName('');
   };
 
-  const toggleCategoryFlag = (idx: number, flag: 'hasGroups' | 'hasBrackets') => {
-    const newCats = [...categories];
-    newCats[idx][flag] = !newCats[idx][flag];
-    setCategories(newCats);
-  };
+
 
   const removeCategory = (index: number) => {
     const newCats = [...categories];

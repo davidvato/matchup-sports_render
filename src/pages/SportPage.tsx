@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronLeft, Info, Gavel, Trophy, MapPin, Calendar } from 'lucide-react';
 import { sportsData } from '../data/sports';
-import bgImage from '../assets/login-bg.png';
 
 interface Tournament {
   id: string;
