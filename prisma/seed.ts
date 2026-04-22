@@ -1,28 +1,23 @@
-import pkg from '@prisma/client';
-const { PrismaClient } = pkg;
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  const superAdmin = await prisma.user.upsert({
-    where: { username: 'davidvato' },
-    update: {},
-    create: {
-      username: 'davidvato',
-      password: 'BleuBerry2026..', // In a real app, hash this!
-      role: 'SUPERADMIN',
-    },
-  });
-
-  console.log({ superAdmin });
+  const existing = await prisma.user.findUnique({ where: { username: 'admin' } });
+  if (!existing) {
+    await prisma.user.create({
+      data: {
+        username: 'admin',
+        password: 'admin123',
+        role: 'ADMIN'
+      }
+    });
+    console.log('Admin user created: admin / admin123');
+  } else {
+    console.log('Admin user already exists, skipping.');
+  }
 }
 
 main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async (e) => {
-    console.error(e);
-    await prisma.$disconnect();
-    process.exit(1);
-  });
+  .catch(e => { console.error(e); process.exit(1); })
+  .finally(() => prisma.$disconnect());

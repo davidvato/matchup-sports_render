@@ -9,7 +9,7 @@
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "build": "tsc -b && tsc -p tsconfig.server.json && vite build",
     "postinstall": "npx prisma generate",
-    "start": "npx prisma db push && node dist-server/index.js",
+    "start": "npx prisma db push && npx ts-node prisma/seed.ts && node dist-server/index.js",
     "lint": "eslint .",
     "preview": "vite preview"
   },
